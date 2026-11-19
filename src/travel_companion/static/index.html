@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>travel-companion</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px; }
+  .card { background: #1d1d1d; border-radius: 12px; padding: 20px; }
+  .card h2 { margin: 0 0 8px; font-size: 1.6rem; }
+  .card p { font-size: 1.2rem; line-height: 1.4; }
+  .evidence { margin: 16px 0 0; padding: 12px 0 0; border-top: 1px solid #333; list-style: none; color: #aaa; }
+  .evidence li { margin: 4px 0; }
+  .evidence .source { color: #777; font-size: 0.85rem; }
+  #rate-form { margin-top: 16px; display: flex; gap: 8px; align-items: center; font-size: 1.2rem; }
+  #rate-form input { font-size: 1.2rem; width: 8em; padding: 8px; }
+  #rate-form button { font-size: 1.2rem; padding: 8px 16px; }
+</style>
+</head>
+<body>
+<main>
+  <section id="card" class="card"><p>Loading…</p></section>
+  <form id="rate-form">
+    <label for="rate-input">Rate (₡ per US dollar)</label>
+    <input id="rate-input" name="colones_per_dollar" type="number" inputmode="decimal" min="0" step="any" required>
+    <button type="submit">Save</button>
+  </form>
+  <p><a id="vault-link" href="/vault" style="color: #9cf; font-size: 1.2rem;">Vault</a></p>
+</main>
+<script>
+  function appendTextElement(parent, tagName, text, className) {
+    const element = document.createElement(tagName);
+    element.textContent = text;
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+  }
+
+  function renderAnswerCard(container, card) {
+    container.replaceChildren();
+    container.dataset.kind = card.kind;
+    appendTextElement(container, "h2", card.title);
+    appendTextElement(container, "p", card.body);
+    const evidenceList = appendTextElement(container, "ul", "", "evidence");
+    for (const item of card.evidence) {
+      const row = appendTextElement(evidenceList, "li", item.text);
+      appendTextElement(row, "div", item.source, "source");
+    }
+  }
+
+  async function showStatusCard() {
+    const container = document.getElementById("card");
+    try {
+      const response = await fetch("/api/status");
+      renderAnswerCard(container, await response.json());
+    } catch (error) {
+      container.textContent = "The app is not responding: " + error;
+    }
+  }
+
+  async function showRateCardAfter(request) {
+    const container = document.getElementById("card");
+    try {
+      const response = await request;
+      const body = await response.json();
+      if (!response.ok) {
+        container.textContent = "That Rate was not saved. Enter a number above zero.";
+        return;
+      }
+      renderAnswerCard(container, body);
+    } catch (error) {
+      container.textContent = "The app is not responding: " + error;
+    }
+  }
+
+  function saveRate(event) {
+    event.preventDefault();
+    const colonesPerDollar = Number(document.getElementById("rate-input").value);
+    showRateCardAfter(fetch("/api/rate", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ colones_per_dollar: colonesPerDollar }),
+    }));
+  }
+
+  document.getElementById("rate-form").addEventListener("submit", saveRate);
+  showStatusCard();
+</script>
+</body>
+</html>

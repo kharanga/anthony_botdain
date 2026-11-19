@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>travel-companion vault</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px; }
+  a { color: #9cf; font-size: 1.2rem; }
+  .card { background: #1d1d1d; border-radius: 12px; padding: 20px; margin-top: 16px; }
+  .card h2 { margin: 0 0 8px; font-size: 1.6rem; }
+  .card p { font-size: 1.2rem; line-height: 1.4; }
+  .card img { max-width: 100%; background: #fff; border-radius: 8px; }
+  .evidence { margin: 16px 0 0; padding: 12px 0 0; border-top: 1px solid #333; list-style: none; color: #aaa; }
+  .evidence li { margin: 4px 0; }
+  .evidence .source { color: #777; font-size: 0.85rem; }
+  .documents { list-style: none; padding: 0; }
+  .documents button { font-size: 1.3rem; padding: 12px 16px; margin: 4px 0; width: 100%; text-align: left; }
+  form { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 1.2rem; }
+  form input, form button { font-size: 1.2rem; padding: 8px 16px; }
+  #pin-input { width: 6em; letter-spacing: 0.3em; }
+  .full-screen-button { display: block; font-size: 1.3rem; padding: 12px 16px; margin-top: 12px; width: 100%; }
+  #message { color: #f99; font-size: 1.2rem; min-height: 1.4em; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <a href="/">Home</a>
+  <section id="card" class="card"><p>Loading…</p></section>
+  <p id="message"></p>
+  <form id="pin-form" hidden>
+    <label for="pin-input">PIN</label>
+    <input id="pin-input" name="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required>
+    <button type="submit" id="pin-button">Unlock</button>
+  </form>
+  <form id="add-document-form" hidden>
+    <input id="document-label" name="label" type="text" placeholder="Label, e.g. Boarding pass" required>
+    <input id="document-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" required>
+    <button type="submit">Add document</button>
+  </form>
+  <form id="lock-form" hidden>
+    <button type="submit">Lock vault</button>
+  </form>
+</main>
+<script>
+  let vaultState = "locked";
+
+  function appendTextElement(parent, tagName, text, className) {
+    const element = document.createElement(tagName);
+    element.textContent = text;
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+  }
+
+  function showMessage(text) {
+    document.getElementById("message").textContent = text;
+  }
+
+  function showFormsFor(state) {
+    vaultState = state;
+    document.getElementById("pin-form").hidden = state === "unlocked";
+    document.getElementById("pin-button").textContent = state === "needs_pin" ? "Set PIN" : "Unlock";
+    document.getElementById("add-document-form").hidden = state !== "unlocked";
+    document.getElementById("lock-form").hidden = state !== "unlocked";
+  }
+
+  function appendFullScreenButton(parent, documentId) {
+    const button = appendTextElement(parent, "button", "Show full screen", "full-screen-button");
+    button.addEventListener("click", () => location.assign("/vault/full-screen/" + documentId));
+  }
+
+  function renderVaultCard(card) {
+    const container = document.getElementById("card");
+    container.replaceChildren();
+    container.dataset.kind = card.kind;
+    appendTextElement(container, "h2", card.title);
+    appendTextElement(container, "p", card.body);
+    if (card.photo_url) {
+      const photo = document.createElement("img");
+      photo.src = card.photo_url;
+      photo.alt = card.title;
+      container.appendChild(photo);
+      appendFullScreenButton(container, card.documents[0].id);
+    } else if (card.documents.length) {
+      const list = appendTextElement(container, "ul", "", "documents");
+      for (const summary of card.documents) {
+        const button = appendTextElement(appendTextElement(list, "li", ""), "button", summary.label);
+        button.addEventListener("click", () => showVaultCardAfter(fetch("/api/vault/documents/" + summary.id)));
+      }
+    }
+    const evidenceList = appendTextElement(container, "ul", "", "evidence");
+    for (const item of card.evidence) {
+      const row = appendTextElement(evidenceList, "li", item.text);
+      appendTextElement(row, "div", item.source, "source");
+    }
+    showFormsFor(card.vault_state);
+    scheduleLockCheck(card);
+  }
+
+  const FALLBACK_LOCK_CHECK_SECONDS = 5;
+  const ACTIVITY_REPORT_MIN_GAP_MS = 10000;
+  let lockCheckTimer = null;
+  let lastActivityReportAt = 0;
+
+  function scheduleLockCheck(card) {
+    clearTimeout(lockCheckTimer);
+    if (card.vault_state !== "unlocked") return;
+    const seconds = card.locks_in_seconds ?? FALLBACK_LOCK_CHECK_SECONDS;
+    lockCheckTimer = setTimeout(checkLockState, Math.max(seconds, 1) * 1000);
+  }
+
+  function returnToPinScreenIfLocked(card) {
+    if (card.vault_state === "unlocked") {
+      scheduleLockCheck(card);
+      return;
+    }
+    renderVaultCard(card);
+    showMessage("Locked after 2 minutes of no use.");
+  }
+
+  async function checkLockState() {
+    try {
+      const response = await fetch("/api/vault/state");
+      returnToPinScreenIfLocked(await response.json());
+    } catch (error) {
+      lockCheckTimer = setTimeout(checkLockState, FALLBACK_LOCK_CHECK_SECONDS * 1000);
+    }
+  }
+
+  async function reportActivity() {
+    if (vaultState !== "unlocked") return;
+    const now = Date.now();
+    if (now - lastActivityReportAt < ACTIVITY_REPORT_MIN_GAP_MS) return;
+    lastActivityReportAt = now;
+    try {
+      const response = await fetch("/api/vault/activity", { method: "POST" });
+      returnToPinScreenIfLocked(await response.json());
+    } catch (error) {
+      showMessage("The app is not responding: " + error);
+    }
+  }
+
+  function checkLockStateWhenShownAgain() {
+    if (document.visibilityState === "visible" && vaultState === "unlocked") checkLockState();
+  }
+
+  const PIN_FORMAT_MESSAGE = "Enter exactly 6 digits.";
+
+  function validationMessage(detail) {
+    if (typeof detail === "string") return detail;
+    if (Array.isArray(detail)) return detail.map((problem) => problem.msg).join(" ");
+    return "The app could not accept that.";
+  }
+
+  async function showVaultCardAfter(request, invalidInputMessage) {
+    try {
+      const response = await request;
+      const body = await response.json();
+      if (response.status === 429 || (response.status === 401 && body.detail.unlock_retry_in_seconds)) showMessage(body.detail.body);
+      else if (response.status === 401) showMessage("Wrong PIN.");
+      else if (response.status === 422) showMessage(invalidInputMessage || validationMessage(body.detail));
+      else if (!response.ok && typeof body.detail === "string") showMessage(body.detail);
+      else showMessage("");
+      const card = response.ok ? body : body.detail;
+      if (card && card.kind === "vault") renderVaultCard(card);
+      else if (!response.ok) renderVaultCard(await (await fetch("/api/vault")).json());
+    } catch (error) {
+      showMessage("The app is not responding: " + error);
+    }
+  }
+
+  function postJson(url, payload) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  function submitPin(event) {
+    event.preventDefault();
+    const pinInput = document.getElementById("pin-input");
+    const url = vaultState === "needs_pin" ? "/api/vault/pin" : "/api/vault/unlock";
+    showVaultCardAfter(postJson(url, { pin: pinInput.value }), PIN_FORMAT_MESSAGE);
+    pinInput.value = "";
+  }
+
+  function photoAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",", 2)[1]);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function addDocument(event) {
+    event.preventDefault();
+    const file = document.getElementById("document-photo").files[0];
+    const label = document.getElementById("document-label").value;
+    const photoBase64 = await photoAsBase64(file);
+    showVaultCardAfter(postJson("/api/vault/documents", {
+      label: label,
+      content_type: file.type || "image/jpeg",
+      photo_base64: photoBase64,
+    }));
+    event.target.reset();
+  }
+
+  function lockVault(event) {
+    event.preventDefault();
+    showVaultCardAfter(fetch("/api/vault/lock", { method: "POST" }));
+  }
+
+  document.getElementById("pin-form").addEventListener("submit", submitPin);
+  document.getElementById("add-document-form").addEventListener("submit", addDocument);
+  document.getElementById("lock-form").addEventListener("submit", lockVault);
+  for (const eventName of ["pointerdown", "keydown", "wheel"]) document.addEventListener(eventName, reportActivity, { passive: true });
+  document.addEventListener("visibilitychange", checkLockStateWhenShownAgain);
+  navigator.sendBeacon("/api/vault/full-screen/close");
+  showVaultCardAfter(fetch("/api/vault"));
+</script>
+</body>
+</html>
