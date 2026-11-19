@@ -1,3 +1,4 @@
+import http.client
 import json
 import urllib.error
 import urllib.request
@@ -26,9 +27,12 @@ class ModelClient:
         }
         response_body = self.post_json(request_body)
         try:
-            return response_body["choices"][0]["message"]["content"]
+            content = response_body["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as error:
             raise ModelUnavailable(f"unexpected reply shape: {error}") from error
+        if not isinstance(content, str):
+            raise ModelUnavailable(f"reply content is not text: {type(content).__name__}")
+        return content
 
     def post_json(self, request_body: dict) -> dict:
         http_request = urllib.request.Request(
@@ -40,5 +44,5 @@ class ModelClient:
         try:
             with urllib.request.urlopen(http_request, timeout=REQUEST_TIMEOUT_SECONDS) as http_response:
                 return json.loads(http_response.read())
-        except (urllib.error.URLError, TimeoutError, ConnectionError, json.JSONDecodeError) as error:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, ValueError, http.client.HTTPException) as error:
             raise ModelUnavailable(str(error)) from error

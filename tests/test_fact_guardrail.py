@@ -123,3 +123,11 @@ def test_a_reply_that_puts_the_dollar_sign_on_the_rate_falls_back_to_the_templat
     card = asked_rate_card(client)
 
     assert card["body"] == RATE_TEMPLATE_ANSWER
+
+
+def test_a_null_reply_content_falls_back_to_the_template(client, fake_model):
+    fake_model.reply_with_message_content(None)
+
+    card = asked_rate_card(client)
+
+    assert card["body"] == RATE_TEMPLATE_ANSWER

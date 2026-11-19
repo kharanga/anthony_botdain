@@ -82,3 +82,26 @@ def test_ask_says_the_model_is_unavailable_when_nothing_listens_at_the_endpoint(
 
     assert response.status_code == 503
     assert response.json()["kind"] == "model_unavailable"
+
+
+def asked_card_status_and_kind(client):
+    response = client.post("/api/ask", json={"question": "What does pura vida mean?"})
+    return response.status_code, response.json()["kind"]
+
+
+def test_a_null_reply_content_gives_the_model_unavailable_card(client, fake_model):
+    fake_model.reply_with_message_content(None)
+
+    assert asked_card_status_and_kind(client) == (503, "model_unavailable")
+
+
+def test_a_non_text_reply_content_gives_the_model_unavailable_card(client, fake_model):
+    fake_model.reply_with_message_content([{"type": "text", "text": "hi"}])
+
+    assert asked_card_status_and_kind(client) == (503, "model_unavailable")
+
+
+def test_a_reply_that_is_not_utf8_gives_the_model_unavailable_card(client, fake_model):
+    fake_model.reply_with_raw_body(b"\xff\xfe\x00not json")
+
+    assert asked_card_status_and_kind(client) == (503, "model_unavailable")
