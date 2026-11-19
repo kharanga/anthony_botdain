@@ -172,3 +172,18 @@ def test_full_screen_lock_polling_does_not_keep_the_vault_open(config_path):
     assert level_before_lock == brightness_after_lock["max_level"]
     assert brightness_after_lock["full_screen_document_id"] is None
     assert brightness_after_lock["level"] < brightness_after_lock["max_level"]
+
+
+def test_an_idle_lock_seen_by_the_vault_page_restores_brightness(config_path):
+    client, clock = clocked_client(config_path)
+    with client:
+        document_id = vault_with_specimen_document(client)["documents"][0]["id"]
+        level_before = client.get("/api/display/brightness").json()["level"]
+        client.post(f"/api/vault/documents/{document_id}/full-screen")
+
+        clock.advance(TWO_MINUTES)
+        client.get("/api/vault/state")
+        brightness = client.get("/api/display/brightness").json()
+
+    assert brightness["level"] == level_before
+    assert brightness["full_screen_document_id"] is None

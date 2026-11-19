@@ -54,6 +54,10 @@ class VaultSession:
         self._wrong_pin_count = 0
         self._next_pin_attempt_at = clock()
         self.pin_check_lock = threading.Lock()
+        self._lock_listeners: list[Callable[[], None]] = []
+
+    def call_when_locked(self, listener: Callable[[], None]) -> None:
+        self._lock_listeners.append(listener)
 
     def unlock(self, key: bytes) -> None:
         self._key = key
@@ -72,6 +76,8 @@ class VaultSession:
 
     def lock(self) -> None:
         self._key = None
+        for listener in self._lock_listeners:
+            listener()
 
     def _lock_if_idle_too_long(self) -> None:
         if self._key is not None and self.locks_in_seconds() <= 0:

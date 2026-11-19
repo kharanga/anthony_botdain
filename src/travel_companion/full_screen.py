@@ -51,6 +51,7 @@ def display_card(view: FullScreenView) -> DisplayCard:
 
 def full_screen_router(database_path: Path, session: VaultSession, view: FullScreenView) -> APIRouter:
     router = APIRouter()
+    session.call_when_locked(view.close)
 
     def key_or_close_and_locked_error() -> bytes:
         key = session.unlocked_key()

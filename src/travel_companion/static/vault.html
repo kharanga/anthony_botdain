@@ -220,6 +220,7 @@
   document.getElementById("lock-form").addEventListener("submit", lockVault);
   for (const eventName of ["pointerdown", "keydown", "wheel"]) document.addEventListener(eventName, reportActivity, { passive: true });
   document.addEventListener("visibilitychange", checkLockStateWhenShownAgain);
+  navigator.sendBeacon("/api/vault/full-screen/close");
   showVaultCardAfter(fetch("/api/vault"));
 </script>
 </body>
