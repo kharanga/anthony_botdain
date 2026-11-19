@@ -62,7 +62,6 @@ def full_screen_router(database_path: Path, session: VaultSession, view: FullScr
     def full_screen_card(key: bytes, document_id: int) -> VaultCard:
         document = one_document(database_path, key, document_id)
         if document is None:
-            view.close()
             raise HTTPException(status_code=404, detail="No such document in the vault.")
         return document_card(database_path, document)
 
