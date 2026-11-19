@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 
 from travel_companion.brightness import BrightnessBackend
 from travel_companion.cards import AnswerCard, Evidence
-from travel_companion.vault import HTTP_LOCKED, VaultCard, VaultSession, document_card, locked_card, one_document
+from travel_companion.vault import HTTP_LOCKED, VaultCard, VaultSession, document_card, locked_card, one_document_summary
 
 FULL_SCREEN_PAGE_PATH = Path(__file__).resolve().parent / "static" / "full_screen.html"
 
@@ -60,7 +60,7 @@ def full_screen_router(database_path: Path, session: VaultSession, view: FullScr
         return key
 
     def full_screen_card(key: bytes, document_id: int) -> VaultCard:
-        document = one_document(database_path, key, document_id)
+        document = one_document_summary(database_path, key, document_id)
         if document is None:
             raise HTTPException(status_code=404, detail="No such document in the vault.")
         return document_card(database_path, document)

@@ -23,6 +23,7 @@ IDLE_LOCK_SECONDS = 120
 
 VAULT_PAGE_PATH = Path(__file__).resolve().parent / "static" / "vault.html"
 DOCUMENT_PURPOSE = b"vault-document"
+SUMMARY_PURPOSE = b"vault-document-summary"
 HTTP_LOCKED = 423
 PHOTO_RESPONSE_HEADERS = {
     "Cache-Control": "no-store",
@@ -35,6 +36,7 @@ VAULT_SCHEMA_STATEMENTS = [
     "CREATE TABLE IF NOT EXISTS vault_pin (id INTEGER PRIMARY KEY CHECK (id = 1), salt BLOB NOT NULL, key_check BLOB NOT NULL)",
     "CREATE SEQUENCE IF NOT EXISTS vault_document_ids START 1",
     "CREATE TABLE IF NOT EXISTS vault_documents (id INTEGER PRIMARY KEY DEFAULT nextval('vault_document_ids'), sealed_document BLOB NOT NULL)",
+    "ALTER TABLE vault_documents ADD COLUMN IF NOT EXISTS sealed_summary BLOB",
 ]
 
 
@@ -68,6 +70,13 @@ class VaultSession:
         if key is not None:
             self._last_use_at = self._clock()
         return key
+
+
+@dataclass(frozen=True)
+class DocumentSummary:
+    id: int
+    label: str
+    content_type: str
 
 
 @dataclass(frozen=True)
@@ -128,6 +137,10 @@ def sealed_document_bytes(key: bytes, label: str, content_type: str, photo: byte
     return seal(key, plaintext, DOCUMENT_PURPOSE)
 
 
+def sealed_summary_bytes(key: bytes, label: str, content_type: str) -> bytes:
+    return seal(key, json.dumps({"label": label, "content_type": content_type}).encode(), SUMMARY_PURPOSE)
+
+
 def opened_document(key: bytes, document_id: int, sealed_document: bytes) -> VaultDocument:
     fields = json.loads(open_sealed(key, sealed_document, DOCUMENT_PURPOSE))
     return VaultDocument(
@@ -138,20 +151,48 @@ def opened_document(key: bytes, document_id: int, sealed_document: bytes) -> Vau
     )
 
 
-def store_sealed_document(database_path: Path, sealed_document: bytes) -> int:
+def opened_summary(key: bytes, document_id: int, sealed_summary: bytes) -> DocumentSummary:
+    fields = json.loads(open_sealed(key, sealed_summary, SUMMARY_PURPOSE))
+    return DocumentSummary(id=document_id, label=fields["label"], content_type=fields["content_type"])
+
+
+def store_sealed_document(database_path: Path, sealed_document: bytes, sealed_summary: bytes) -> int:
     with connect(database_path) as connection:
         row = connection.execute(
-            "INSERT INTO vault_documents (sealed_document) VALUES (?) RETURNING vault_documents.id", [sealed_document]
+            "INSERT INTO vault_documents (sealed_document, sealed_summary) VALUES (?, ?) RETURNING vault_documents.id",
+            [sealed_document, sealed_summary],
         ).fetchone()
     return row[0]
 
 
-def all_documents(database_path: Path, key: bytes) -> list[VaultDocument]:
+def add_missing_summaries(database_path: Path, key: bytes) -> None:
     with connect(database_path) as connection:
         rows = connection.execute(
-            "SELECT vault_documents.id, vault_documents.sealed_document FROM vault_documents ORDER BY vault_documents.id"
+            "SELECT vault_documents.id, vault_documents.sealed_document FROM vault_documents "
+            "WHERE vault_documents.sealed_summary IS NULL"
         ).fetchall()
-    return [opened_document(key, document_id, bytes(sealed)) for document_id, sealed in rows]
+        for document_id, sealed in rows:
+            document = opened_document(key, document_id, bytes(sealed))
+            connection.execute(
+                "UPDATE vault_documents SET sealed_summary = ? WHERE vault_documents.id = ?",
+                [sealed_summary_bytes(key, document.label, document.content_type), document_id],
+            )
+
+
+def all_document_summaries(database_path: Path, key: bytes) -> list[DocumentSummary]:
+    with connect(database_path) as connection:
+        rows = connection.execute(
+            "SELECT vault_documents.id, vault_documents.sealed_summary FROM vault_documents ORDER BY vault_documents.id"
+        ).fetchall()
+    return [opened_summary(key, document_id, bytes(sealed)) for document_id, sealed in rows]
+
+
+def one_document_summary(database_path: Path, key: bytes, document_id: int) -> DocumentSummary | None:
+    with connect(database_path) as connection:
+        row = connection.execute(
+            "SELECT vault_documents.sealed_summary FROM vault_documents WHERE vault_documents.id = ?", [document_id]
+        ).fetchone()
+    return None if row is None else opened_summary(key, document_id, bytes(row[0]))
 
 
 def one_document(database_path: Path, key: bytes, document_id: int) -> VaultDocument | None:
@@ -199,7 +240,7 @@ def locked_card(database_path: Path) -> VaultCard:
     )
 
 
-def unlocked_card(database_path: Path, documents: list[VaultDocument]) -> VaultCard:
+def unlocked_card(database_path: Path, documents: list[DocumentSummary]) -> VaultCard:
     return VaultCard(
         kind="vault",
         title="Vault",
@@ -210,7 +251,7 @@ def unlocked_card(database_path: Path, documents: list[VaultDocument]) -> VaultC
     )
 
 
-def document_card(database_path: Path, document: VaultDocument) -> VaultCard:
+def document_card(database_path: Path, document: DocumentSummary) -> VaultCard:
     return VaultCard(
         kind="vault",
         title=document.label,
@@ -231,7 +272,7 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
             return needs_pin_card(database_path)
         if key is None:
             return locked_card(database_path)
-        card = unlocked_card(database_path, all_documents(database_path, key))
+        card = unlocked_card(database_path, all_document_summaries(database_path, key))
         return card.model_copy(update={"locks_in_seconds": whole_seconds_until_lock(session)})
 
     def current_vault_card() -> VaultCard:
@@ -242,6 +283,12 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
         if key is None:
             raise HTTPException(status_code=HTTP_LOCKED, detail=locked_card(database_path).model_dump())
         return key
+
+    def summary_or_not_found(key: bytes, document_id: int) -> DocumentSummary:
+        summary = one_document_summary(database_path, key, document_id)
+        if summary is None:
+            raise HTTPException(status_code=404, detail="No such document in the vault.")
+        return summary
 
     def document_or_not_found(key: bytes, document_id: int) -> VaultDocument:
         document = one_document(database_path, key, document_id)
@@ -277,6 +324,7 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
         if not key_matches_check(key, key_check):
             session.lock()
             raise HTTPException(status_code=401, detail=locked_card(database_path).model_dump())
+        add_missing_summaries(database_path, key)
         session.unlock(key)
         return current_vault_card()
 
@@ -297,14 +345,17 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
     def post_document(new_document: NewDocument) -> VaultCard:
         key = key_or_locked_error()
         photo = photo_from_base64(new_document.photo_base64)
-        sealed = sealed_document_bytes(key, new_document.label, new_document.content_type, photo)
-        document_id = store_sealed_document(database_path, sealed)
-        return document_card(database_path, document_or_not_found(key, document_id))
+        document_id = store_sealed_document(
+            database_path,
+            sealed_document_bytes(key, new_document.label, new_document.content_type, photo),
+            sealed_summary_bytes(key, new_document.label, new_document.content_type),
+        )
+        return document_card(database_path, summary_or_not_found(key, document_id))
 
     @router.get("/api/vault/documents/{document_id}")
     def get_document(document_id: int) -> VaultCard:
         key = key_or_locked_error()
-        return document_card(database_path, document_or_not_found(key, document_id))
+        return document_card(database_path, summary_or_not_found(key, document_id))
 
     @router.get("/api/vault/documents/{document_id}/photo")
     def get_document_photo(document_id: int) -> Response:
