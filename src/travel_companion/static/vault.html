@@ -151,7 +151,8 @@
     try {
       const response = await request;
       const body = await response.json();
-      if (response.status === 401) showMessage("Wrong PIN.");
+      if (response.status === 429 || (response.status === 401 && body.detail.unlock_retry_in_seconds)) showMessage(body.detail.body);
+      else if (response.status === 401) showMessage("Wrong PIN.");
       else if (response.status === 422) showMessage("Enter exactly 6 digits.");
       else if (!response.ok && typeof body.detail === "string") showMessage(body.detail);
       else showMessage("");

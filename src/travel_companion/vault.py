@@ -2,6 +2,7 @@ import base64
 import binascii
 import json
 import math
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -20,6 +21,10 @@ VaultState = Literal["needs_pin", "locked", "unlocked"]
 Clock = Callable[[], float]
 
 IDLE_LOCK_SECONDS = 120
+FREE_WRONG_PIN_ATTEMPTS = 5
+FIRST_WRONG_PIN_WAIT_SECONDS = 30
+LONGEST_WRONG_PIN_WAIT_SECONDS = 3600
+HTTP_TOO_MANY_ATTEMPTS = 429
 
 VAULT_PAGE_PATH = Path(__file__).resolve().parent / "static" / "vault.html"
 DOCUMENT_PURPOSE = b"vault-document"
@@ -46,10 +51,24 @@ class VaultSession:
         self._clock = clock
         self._idle_lock_seconds = idle_lock_seconds
         self._last_use_at = clock()
+        self._wrong_pin_count = 0
+        self._next_pin_attempt_at = clock()
+        self.pin_check_lock = threading.Lock()
 
     def unlock(self, key: bytes) -> None:
         self._key = key
         self._last_use_at = self._clock()
+        self._wrong_pin_count = 0
+
+    def record_wrong_pin(self) -> None:
+        self._wrong_pin_count += 1
+        extra_wrong_attempts = self._wrong_pin_count - FREE_WRONG_PIN_ATTEMPTS
+        if extra_wrong_attempts >= 0:
+            wait_seconds = min(FIRST_WRONG_PIN_WAIT_SECONDS * 2**extra_wrong_attempts, LONGEST_WRONG_PIN_WAIT_SECONDS)
+            self._next_pin_attempt_at = self._clock() + wait_seconds
+
+    def seconds_until_pin_attempt_allowed(self) -> int:
+        return max(0, math.ceil(self._next_pin_attempt_at - self._clock()))
 
     def lock(self) -> None:
         self._key = None
@@ -107,6 +126,7 @@ class VaultCard(AnswerCard):
     documents: list[VaultDocumentSummary]
     photo_url: str | None = None
     locks_in_seconds: int | None = None
+    unlock_retry_in_seconds: int | None = None
 
 
 def whole_seconds_until_lock(session: VaultSession) -> int:
@@ -240,6 +260,18 @@ def locked_card(database_path: Path) -> VaultCard:
     )
 
 
+def wrong_pin_card(database_path: Path, retry_in_seconds: int) -> VaultCard:
+    card = locked_card(database_path)
+    if retry_in_seconds == 0:
+        return card
+    return card.model_copy(
+        update={
+            "body": f"Too many wrong PINs. Try again in {retry_in_seconds} seconds.",
+            "unlock_retry_in_seconds": retry_in_seconds,
+        }
+    )
+
+
 def unlocked_card(database_path: Path, documents: list[DocumentSummary]) -> VaultCard:
     return VaultCard(
         kind="vault",
@@ -306,26 +338,36 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
 
     @router.post("/api/vault/pin")
     def post_pin(entry: PinEntry) -> VaultCard:
-        if stored_pin_salt_and_check(database_path) is not None:
-            raise HTTPException(status_code=409, detail="The vault PIN is already set.")
-        salt = new_salt()
-        key = key_from_pin(entry.pin, salt)
-        store_pin_salt_and_check(database_path, salt, key_check_for(key))
-        session.unlock(key)
+        with session.pin_check_lock:
+            if stored_pin_salt_and_check(database_path) is not None:
+                raise HTTPException(status_code=409, detail="The vault PIN is already set.")
+            salt = new_salt()
+            key = key_from_pin(entry.pin, salt)
+            store_pin_salt_and_check(database_path, salt, key_check_for(key))
+            session.unlock(key)
         return current_vault_card()
 
     @router.post("/api/vault/unlock")
     def post_unlock(entry: PinEntry) -> VaultCard:
-        salt_and_check = stored_pin_salt_and_check(database_path)
-        if salt_and_check is None:
-            raise HTTPException(status_code=409, detail=needs_pin_card(database_path).model_dump())
-        salt, key_check = salt_and_check
-        key = key_from_pin(entry.pin, salt)
-        if not key_matches_check(key, key_check):
-            session.lock()
-            raise HTTPException(status_code=401, detail=locked_card(database_path).model_dump())
-        add_missing_summaries(database_path, key)
-        session.unlock(key)
+        with session.pin_check_lock:
+            salt_and_check = stored_pin_salt_and_check(database_path)
+            if salt_and_check is None:
+                raise HTTPException(status_code=409, detail=needs_pin_card(database_path).model_dump())
+            wait_seconds = session.seconds_until_pin_attempt_allowed()
+            if wait_seconds > 0:
+                session.lock()
+                raise HTTPException(
+                    status_code=HTTP_TOO_MANY_ATTEMPTS, detail=wrong_pin_card(database_path, wait_seconds).model_dump()
+                )
+            salt, key_check = salt_and_check
+            key = key_from_pin(entry.pin, salt)
+            if not key_matches_check(key, key_check):
+                session.lock()
+                session.record_wrong_pin()
+                retry_in_seconds = session.seconds_until_pin_attempt_allowed()
+                raise HTTPException(status_code=401, detail=wrong_pin_card(database_path, retry_in_seconds).model_dump())
+            add_missing_summaries(database_path, key)
+            session.unlock(key)
         return current_vault_card()
 
     @router.post("/api/vault/lock")
