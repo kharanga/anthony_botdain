@@ -3,8 +3,10 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
+from travel_companion.ask import ask_router
 from travel_companion.cards import AnswerCard, Evidence
 from travel_companion.config import DEFAULT_CONFIG_PATH, Config, load_config
+from travel_companion.model_client import ModelClient
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -30,6 +32,8 @@ def create_app(config_path: Path = DEFAULT_CONFIG_PATH) -> FastAPI:
     config.data_dir.mkdir(parents=True, exist_ok=True)
     app = FastAPI(title="travel-companion")
     app.state.config = config
+    app.state.model_client = ModelClient(config.model_endpoint_url)
+    app.include_router(ask_router)
 
     @app.get("/api/status")
     def get_status() -> AnswerCard:
