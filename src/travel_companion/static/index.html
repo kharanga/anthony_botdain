@@ -13,11 +13,19 @@
   .evidence { margin: 16px 0 0; padding: 12px 0 0; border-top: 1px solid #333; list-style: none; color: #aaa; }
   .evidence li { margin: 4px 0; }
   .evidence .source { color: #777; font-size: 0.85rem; }
+  #rate-form { margin-top: 16px; display: flex; gap: 8px; align-items: center; font-size: 1.2rem; }
+  #rate-form input { font-size: 1.2rem; width: 8em; padding: 8px; }
+  #rate-form button { font-size: 1.2rem; padding: 8px 16px; }
 </style>
 </head>
 <body>
 <main>
   <section id="card" class="card"><p>Loading…</p></section>
+  <form id="rate-form">
+    <label for="rate-input">Rate (₡ per US dollar)</label>
+    <input id="rate-input" name="colones_per_dollar" type="number" inputmode="decimal" min="0" step="any" required>
+    <button type="submit">Save</button>
+  </form>
 </main>
 <script>
   function appendTextElement(parent, tagName, text, className) {
@@ -50,6 +58,32 @@
     }
   }
 
+  async function showRateCardAfter(request) {
+    const container = document.getElementById("card");
+    try {
+      const response = await request;
+      const body = await response.json();
+      if (!response.ok) {
+        container.textContent = "That Rate was not saved. Enter a number above zero.";
+        return;
+      }
+      renderAnswerCard(container, body);
+    } catch (error) {
+      container.textContent = "The app is not responding: " + error;
+    }
+  }
+
+  function saveRate(event) {
+    event.preventDefault();
+    const colonesPerDollar = Number(document.getElementById("rate-input").value);
+    showRateCardAfter(fetch("/api/rate", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ colones_per_dollar: colonesPerDollar }),
+    }));
+  }
+
+  document.getElementById("rate-form").addEventListener("submit", saveRate);
   showStatusCard();
 </script>
 </body>
