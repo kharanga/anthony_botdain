@@ -4,6 +4,7 @@ from test_vault import PIN, SPECIMEN_LABEL, add_specimen_document, vault_with_sp
 from travel_companion.app import create_app
 
 TWO_MINUTES = 120
+FULL_SCREEN_POLL_SECONDS = 5
 
 
 class FakeClock:
@@ -150,3 +151,24 @@ def test_vault_page_reports_taps_and_returns_to_the_pin_screen_when_locked(clien
     assert "/api/vault/activity" in page
     assert "/api/vault/state" in page
     assert "locks_in_seconds" in page
+
+
+def test_full_screen_lock_polling_does_not_keep_the_vault_open(config_path):
+    client, clock = clocked_client(config_path)
+    with client:
+        document_id = vault_with_specimen_document(client)["documents"][0]["id"]
+        client.post(f"/api/vault/documents/{document_id}/full-screen")
+        level_before_lock = client.get("/api/display/brightness").json()["level"]
+
+        poll_statuses = []
+        for _ in range(TWO_MINUTES // FULL_SCREEN_POLL_SECONDS):
+            clock.advance(FULL_SCREEN_POLL_SECONDS)
+            poll_statuses.append(client.get("/api/vault/full-screen").status_code)
+            client.get("/api/vault/state")
+        brightness_after_lock = client.get("/api/display/brightness").json()
+
+    assert poll_statuses[:-1] == [200] * (len(poll_statuses) - 1)
+    assert poll_statuses[-1] == 423
+    assert level_before_lock == brightness_after_lock["max_level"]
+    assert brightness_after_lock["full_screen_document_id"] is None
+    assert brightness_after_lock["level"] < brightness_after_lock["max_level"]
