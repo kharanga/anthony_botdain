@@ -1,0 +1,55 @@
+# travel-companion
+
+An offline travel companion. The plan is in `SPEC.md`; project terms are in `GLOSSARY.md`.
+
+## Run on the Mac with fake data
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+.venv/bin/pytest -q
+.venv/bin/travel-companion
+```
+
+The app serves on http://127.0.0.1:8765. Set `TRAVEL_COMPANION_CONFIG` to use a config other than `config/default.toml`.
+
+## Real model on the Mac (llama.cpp)
+
+The app talks to one OpenAI-compatible model endpoint set in config (`[model] endpoint_url`, see `docs/adr/0001-one-model-endpoint.md`). On the Mac that is llama.cpp's `llama-server` running Qwen2.5-1.5B-Instruct (GGUF, Q4_K_M).
+
+1. Install llama.cpp:
+
+   ```sh
+   brew install llama.cpp
+   ```
+
+2. Download the model (about 1.1 GB) into the gitignored `models/` folder. The script checks its SHA-256 and does nothing if the file is already there:
+
+   ```sh
+   scripts/fetch_model.sh
+   ```
+
+   It comes from the official `Qwen/Qwen2.5-1.5B-Instruct-GGUF` repo on Hugging Face. Set `MODELS_DIR` to keep models somewhere else, for example one shared folder for several checkouts.
+
+3. Start the server:
+
+   ```sh
+   scripts/start_model_server.sh
+   ```
+
+   It runs with `--offline`, so it makes no network calls, listens on 127.0.0.1:8080 and uses a 2,048-token context to match the AI HAT+ 2. `MODEL_PORT`, `MODELS_DIR` and `MODEL_PATH` override the defaults. It uses about 1 GB of RAM. Stop it with Ctrl-C.
+
+4. Start the app. `config/default.toml` already points at `http://127.0.0.1:8080/v1/chat/completions`; if the server runs elsewhere, change only `endpoint_url`.
+
+   ```sh
+   .venv/bin/travel-companion
+   curl -s http://127.0.0.1:8765/api/ask -H 'Content-Type: application/json' -d '{"question": "What does pura vida mean?"}'
+   ```
+
+### Test against the real model
+
+The normal test run uses a scripted fake endpoint. The tests in `tests/test_real_model.py` are skipped unless you point them at a running server:
+
+```sh
+TRAVEL_COMPANION_REAL_MODEL_URL=http://127.0.0.1:8080/v1/chat/completions .venv/bin/pytest -q tests/test_real_model.py
+```
