@@ -53,3 +53,11 @@ The normal test run uses a scripted fake endpoint. The tests in `tests/test_real
 ```sh
 TRAVEL_COMPANION_REAL_MODEL_URL=http://127.0.0.1:8080/v1/chat/completions .venv/bin/pytest -q tests/test_real_model.py
 ```
+
+### Benchmark the real model
+
+```sh
+MODELS_DIR=/path/to/models .venv/bin/python -m travel_companion.model_benchmark
+```
+
+It starts its own llama-server on port 8091 (`--port` to change it), measures time to first token, tokens per second, load time and peak memory, then asks a fixed set of Rate questions through the fact guardrail and records how often it rejects the model's reply. It stops the server when it finishes and rewrites `docs/results/T5-mac-model-benchmark.md`. `--speed-repeats` and `--guardrail-repeats` set how many times each prompt runs.

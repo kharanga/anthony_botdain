@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 from collections import deque
 from dataclasses import dataclass
@@ -6,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 CHAT_COMPLETIONS_PATH = "/v1/chat/completions"
 UNSCRIPTED_REPLY_STATUS = 500
+STREAMED_PIECE_PATTERN = re.compile(r"\S+\s*|\s+")
 
 
 @dataclass(frozen=True)
@@ -71,7 +73,19 @@ class FakeModelServer:
                 if reply.status != 200:
                     self.send_json(reply.status, {"error": {"message": "scripted failure"}})
                     return
+                if request_body.get("stream"):
+                    self.send_stream(reply.content)
+                    return
                 self.send_json(200, chat_completion_body(reply.content))
+
+            def send_stream(self, content: str) -> None:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.end_headers()
+                for chunk in streamed_chunks(content):
+                    self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode())
+                    self.wfile.flush()
+                self.wfile.write(b"data: [DONE]\n\n")
 
             def send_json(self, status: int, body: dict) -> None:
                 encoded = json.dumps(body).encode()
@@ -100,3 +114,19 @@ def chat_completion_body(content: str) -> dict:
             }
         ],
     }
+
+
+def streamed_chunk(delta: dict, finish_reason: str | None) -> dict:
+    return {
+        "id": "chatcmpl-fake",
+        "object": "chat.completion.chunk",
+        "model": "fake-model",
+        "choices": [{"index": 0, "delta": delta, "finish_reason": finish_reason}],
+    }
+
+
+def streamed_chunks(content: str) -> list[dict]:
+    content_chunks = [
+        streamed_chunk({"content": piece}, None) for piece in STREAMED_PIECE_PATTERN.findall(content)
+    ]
+    return [streamed_chunk({"role": "assistant"}, None), *content_chunks, streamed_chunk({}, "stop")]
