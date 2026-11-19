@@ -17,6 +17,12 @@ def gh_json(path):
 def slug_from_title(title):
     return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
 
+def task_folder_name(title):
+    task_code, colon, task_name = title.partition(":")
+    if not colon:
+        return slug_from_title(title)
+    return f"{task_code.strip()}-{slug_from_title(task_name)}"
+
 def markdown_for_issue(issue, parent_number):
     labels = ", ".join(label["name"] for label in issue["labels"]) or "none"
     parent_line = f"**Parent:** #{parent_number}  \n" if parent_number else ""
@@ -26,15 +32,13 @@ def markdown_for_issue(issue, parent_number):
 **Labels:** {labels}  
 **GitHub:** {issue['html_url']}
 
-{issue['body'].strip()}
+{(issue['body'] or '').strip()}
 """
 
 task_issues = gh_json(f"repos/{REPO}/issues/{SPEC_ISSUE}/sub_issues?per_page=100")
 written = []
 for task_issue in task_issues:
-    task_code = task_issue["title"].split(":", 1)[0]
-    task_name = task_issue["title"].split(":", 1)[1].strip()
-    folder_name = f"{task_code}-{slug_from_title(task_name)}"
+    folder_name = task_folder_name(task_issue["title"])
     task_is_finished = task_issue["state"] == "closed"
     task_folder = (archive_root if task_is_finished else active_root) / folder_name
     stale_folder = (active_root if task_is_finished else archive_root) / folder_name
