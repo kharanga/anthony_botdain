@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>travel-companion document</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #fff; overflow: hidden; cursor: none; }
+  #full-screen-photo { display: block; width: 100vw; height: 100vh; object-fit: contain; background: #fff; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<img id="full-screen-photo" alt="" hidden>
+<script>
+  const LOCK_CHECK_INTERVAL_MS = 5000;
+  const CLOSE_URL = "/api/vault/full-screen/close";
+  const documentId = location.pathname.split("/").pop();
+  let closing = false;
+
+  function closeAndReturnToVault() {
+    if (closing) return;
+    closing = true;
+    navigator.sendBeacon(CLOSE_URL);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    location.replace("/vault");
+  }
+
+  function enterBrowserFullScreen() {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }
+
+  function keepScreenAwake() {
+    if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(() => {});
+  }
+
+  async function closeIfVaultLocked() {
+    try {
+      const response = await fetch("/api/vault/full-screen", { cache: "no-store" });
+      if (!response.ok) closeAndReturnToVault();
+    } catch (error) {
+      closeAndReturnToVault();
+    }
+  }
+
+  async function openDocumentFullScreen() {
+    const response = await fetch("/api/vault/documents/" + documentId + "/full-screen", { method: "POST" });
+    if (!response.ok) {
+      closeAndReturnToVault();
+      return;
+    }
+    const card = await response.json();
+    const photo = document.getElementById("full-screen-photo");
+    photo.src = card.photo_url;
+    photo.alt = card.title;
+    photo.hidden = false;
+    enterBrowserFullScreen();
+    keepScreenAwake();
+    setInterval(closeIfVaultLocked, LOCK_CHECK_INTERVAL_MS);
+  }
+
+  document.addEventListener("click", closeAndReturnToVault);
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeAndReturnToVault(); });
+  window.addEventListener("pagehide", () => { if (!closing) navigator.sendBeacon(CLOSE_URL); });
+  openDocumentFullScreen().catch(closeAndReturnToVault);
+</script>
+</body>
+</html>
