@@ -1,0 +1,3 @@
+# One model endpoint instead of one model file
+
+The original plan ran the same GGUF file through llama.cpp on both Mac and Pi. Now that the AI HAT+ 2 is part of the trip device, the Pi runs its LLM and vision model on the HAT through `hailo-ollama`, which only loads Hailo `.hef` files, so the same file can't run on both. Both `hailo-ollama` and the llama.cpp server accept OpenAI-style `/v1/chat/completions` requests, so the app talks to one model endpoint set in config. Mac and Pi stay in step by running the same model family (Qwen2.5-1.5B) instead of the same file. This frees the Pi's CPU for OCR and whisper.cpp. The cost: every model on the HAT is limited to 2,048 tokens of context, and an answer can differ slightly between Mac and Pi.

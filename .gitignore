@@ -1,0 +1,7 @@
+data/
+.env
+.DS_Store
+__pycache__/
+*.gguf
+*.hef
+*.zim
