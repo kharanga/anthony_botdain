@@ -14,6 +14,7 @@ STREAMED_PIECE_PATTERN = re.compile(r"\S+\s*|\s+")
 class ScriptedReply:
     status: int
     content: str
+    raw_body: bytes | None = None
 
 
 class FakeModelServer:
@@ -38,6 +39,13 @@ class FakeModelServer:
     def reply_with(self, *contents: str) -> None:
         with self.lock:
             self.scripted_replies.extend(ScriptedReply(200, content) for content in contents)
+
+    def reply_with_raw_body(self, raw_body: bytes) -> None:
+        with self.lock:
+            self.scripted_replies.append(ScriptedReply(200, "", raw_body))
+
+    def reply_with_message_content(self, content) -> None:
+        self.reply_with_raw_body(json.dumps(chat_completion_body(content)).encode())
 
     def fail_with(self, status: int) -> None:
         with self.lock:
@@ -73,6 +81,9 @@ class FakeModelServer:
                 if reply.status != 200:
                     self.send_json(reply.status, {"error": {"message": "scripted failure"}})
                     return
+                if reply.raw_body is not None:
+                    self.send_raw(reply.raw_body)
+                    return
                 if request_body.get("stream"):
                     self.send_stream(reply.content)
                     return
@@ -86,6 +97,13 @@ class FakeModelServer:
                     self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode())
                     self.wfile.flush()
                 self.wfile.write(b"data: [DONE]\n\n")
+
+            def send_raw(self, raw_body: bytes) -> None:
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(raw_body)))
+                self.end_headers()
+                self.wfile.write(raw_body)
 
             def send_json(self, status: int, body: dict) -> None:
                 encoded = json.dumps(body).encode()

@@ -17,10 +17,12 @@
   const CLOSE_URL = "/api/vault/full-screen/close";
   const documentId = location.pathname.split("/").pop();
   let closing = false;
+  let openRequest = Promise.resolve();
 
-  function closeAndReturnToVault() {
+  async function closeAndReturnToVault() {
     if (closing) return;
     closing = true;
+    await openRequest.catch(() => {});
     navigator.sendBeacon(CLOSE_URL);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     location.replace("/vault");
@@ -46,7 +48,8 @@
   }
 
   async function openDocumentFullScreen() {
-    const response = await fetch("/api/vault/documents/" + documentId + "/full-screen", { method: "POST" });
+    openRequest = fetch("/api/vault/documents/" + documentId + "/full-screen", { method: "POST" });
+    const response = await openRequest;
     if (!response.ok) {
       closeAndReturnToVault();
       return;

@@ -66,7 +66,11 @@ def rate_question(question: str, rate: CurrentRate) -> FactualQuestion:
     return FactualQuestion(
         question=question,
         facts=(
-            Fact(spellings=(rate_text(rate.colones_per_dollar),)),
+            Fact(
+                spellings=(rate_text(rate.colones_per_dollar),),
+                number_written_next_to=COLONES_SPELLINGS,
+                number_never_written_next_to=DOLLAR_SPELLINGS,
+            ),
             Fact(spellings=COLONES_SPELLINGS),
             Fact(spellings=DOLLAR_SPELLINGS),
         ),

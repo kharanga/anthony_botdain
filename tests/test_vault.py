@@ -1,9 +1,12 @@
 import base64
+import json
 from pathlib import Path
 
+import duckdb
 from fastapi.testclient import TestClient
 
 from travel_companion.app import create_app
+from travel_companion.vault_crypto import key_from_pin, key_matches_check, seal
 
 SPECIMEN_PHOTO_PATH = Path(__file__).resolve().parent.parent / "specimens" / "vault" / "specimen-boarding-pass.png"
 SPECIMEN_LABEL = "SPECIMEN boarding pass SJO-LIR"
@@ -188,4 +191,55 @@ def test_vault_page_asks_for_the_pin_and_adds_documents(client):
     assert "/api/vault" in response.text
     assert 'id="pin-form"' in response.text
     assert 'id="add-document-form"' in response.text
+
+
+def store_document_the_way_the_first_vault_build_did(data_dir: Path, label: str) -> None:
+    with duckdb.connect(str(data_dir / "travel_companion.duckdb")) as connection:
+        salt, key_check = connection.execute("SELECT vault_pin.salt, vault_pin.key_check FROM vault_pin").fetchone()
+        key = key_from_pin(PIN, bytes(salt))
+        assert key_matches_check(key, bytes(key_check))
+        plaintext = json.dumps(
+            {"label": label, "content_type": "image/png", "photo_base64": base64.b64encode(specimen_photo()).decode()}
+        ).encode()
+        connection.execute("INSERT INTO vault_documents (sealed_document) VALUES (?)", [seal(key, plaintext, b"vault-document")])
+
+
+def test_documents_stored_by_the_first_vault_build_still_open(config_path, data_dir):
+    with TestClient(create_app(config_path)) as first_run:
+        first_run.post("/api/vault/pin", json={"pin": PIN})
+    store_document_the_way_the_first_vault_build_did(data_dir, SPECIMEN_LABEL)
+
+    with TestClient(create_app(config_path)) as client:
+        unlocked = client.post("/api/vault/unlock", json={"pin": PIN}).json()
+        document_id = unlocked["documents"][0]["id"]
+        document = client.get(f"/api/vault/documents/{document_id}").json()
+        photo = client.get(document["photo_url"])
+        listed_again = client.get("/api/vault").json()
+
+    assert [entry["label"] for entry in unlocked["documents"]] == [SPECIMEN_LABEL]
+    assert document["title"] == SPECIMEN_LABEL
+    assert photo.content == specimen_photo()
+    assert [entry["label"] for entry in listed_again["documents"]] == [SPECIMEN_LABEL]
+
+
+def test_an_svg_document_is_refused(client):
+    client.post("/api/vault/pin", json={"pin": PIN})
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+
+    response = client.post(
+        "/api/vault/documents",
+        json={"label": "Not a photo", "content_type": "image/svg+xml", "photo_base64": base64.b64encode(svg).decode()},
+    )
+
+    assert response.status_code == 422
+    assert client.get("/api/vault").json()["documents"] == []
+
+
+def test_a_document_photo_is_served_so_it_cannot_run_script(client):
+    photo_url = vault_with_specimen_document(client)["photo_url"]
+
+    response = client.get(photo_url)
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["content-security-policy"] == "sandbox"
 

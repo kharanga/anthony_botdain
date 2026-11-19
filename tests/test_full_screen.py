@@ -115,3 +115,31 @@ def test_full_screen_page_has_nothing_but_the_document(client):
 
 def test_vault_page_links_each_document_to_the_full_screen_view(client):
     assert "/vault/full-screen/" in client.get("/vault").text
+
+
+def test_an_unknown_document_leaves_the_open_full_screen_view_alone(client):
+    document_id = vault_with_specimen_document(client)["documents"][0]["id"]
+    open_full_screen(client, document_id)
+
+    response = open_full_screen(client, 999)
+    during = brightness_card(client)
+
+    assert response.status_code == 404
+    assert during["level"] == during["max_level"]
+    assert during["full_screen_document_id"] == document_id
+    assert client.get("/api/vault/full-screen").json()["title"] == SPECIMEN_LABEL
+
+
+def test_locking_the_vault_restores_brightness_without_waiting_for_the_full_screen_page(client):
+    document_id = vault_with_specimen_document(client)["documents"][0]["id"]
+    level_before = brightness_card(client)["level"]
+    open_full_screen(client, document_id)
+
+    client.post("/api/vault/lock")
+
+    assert brightness_card(client)["level"] == level_before
+    assert brightness_card(client)["full_screen_document_id"] is None
+
+
+def test_vault_page_closes_any_full_screen_view_left_open(client):
+    assert "/api/vault/full-screen/close" in client.get("/vault").text
