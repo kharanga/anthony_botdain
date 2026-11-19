@@ -1,4 +1,5 @@
 import argparse
+import http.client
 import json
 import os
 import platform
@@ -24,7 +25,7 @@ from travel_companion.fact_guardrail import (
     keeps_every_fact,
     phrased_answer,
 )
-from travel_companion.model_client import REQUEST_TIMEOUT_SECONDS, ModelClient
+from travel_companion.model_client import REQUEST_TIMEOUT_SECONDS, ModelClient, ModelUnavailable
 from travel_companion.prompt_budget import REPLY_TOKENS, estimated_prompt_tokens, fit_to_prompt_budget
 from travel_companion.rate import CurrentRate, rate_question
 
@@ -43,6 +44,8 @@ MEMORY_SAMPLE_INTERVAL_SECONDS = 0.1
 KILOBYTES_PER_MEGABYTE = 1024
 FOOTPRINT_PATTERN = re.compile(r"Footprint:\s*([\d.]+)\s*(KB|MB|GB)")
 FOOTPRINT_UNIT_MEGABYTES = {"KB": 1 / 1024, "MB": 1.0, "GB": 1024.0}
+STREAM_ERRORS = (urllib.error.URLError, TimeoutError, ConnectionError, ValueError, http.client.HTTPException)
+NO_REPLY_CELL = "no reply"
 LONG_QUESTION = "Where can I buy a bus ticket in San José, and how early should I get to the station? " * 60
 
 
@@ -59,10 +62,15 @@ class StreamTiming:
     streamed_token_count: int
 
 
+class EmptyStream(Exception):
+    pass
+
+
 @dataclass(frozen=True)
 class SpeedResult:
     prompt: SpeedPrompt
     timings: list[StreamTiming]
+    failed_stream_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -78,6 +86,7 @@ class GuardrailVerdict:
     kept_every_fact: bool
     added_no_number: bool
     added_no_name: bool
+    model_failed: bool = False
 
     @property
     def kept(self) -> bool:
@@ -186,6 +195,8 @@ def timed_stream(endpoint_url: str, messages: list[ChatMessage]) -> StreamTiming
         for server_sent_line in stream:
             if streamed_content(server_sent_line):
                 content_arrival_times.append(time.perf_counter())
+    if not content_arrival_times:
+        raise EmptyStream("the stream had no content chunks")
     first_token_at, last_token_at = content_arrival_times[0], content_arrival_times[-1]
     decoding_seconds = last_token_at - first_token_at
     tokens_after_first = len(content_arrival_times) - 1
@@ -196,13 +207,31 @@ def timed_stream(endpoint_url: str, messages: list[ChatMessage]) -> StreamTiming
     )
 
 
+def timed_stream_or_none(endpoint_url: str, messages: list[ChatMessage]) -> StreamTiming | None:
+    try:
+        return timed_stream(endpoint_url, messages)
+    except (EmptyStream, *STREAM_ERRORS):
+        return None
+
+
 def measured_speed(endpoint_url: str, prompt: SpeedPrompt, repeats: int) -> SpeedResult:
-    return SpeedResult(prompt=prompt, timings=[timed_stream(endpoint_url, prompt.messages) for _ in range(repeats)])
+    attempts = [timed_stream_or_none(endpoint_url, prompt.messages) for _ in range(repeats)]
+    timings = [timing for timing in attempts if timing is not None]
+    return SpeedResult(prompt=prompt, timings=timings, failed_stream_count=len(attempts) - len(timings))
+
+
+def failed_verdict(case: GuardrailCase) -> GuardrailVerdict:
+    return GuardrailVerdict(
+        case=case, reply="", kept_every_fact=False, added_no_number=False, added_no_name=False, model_failed=True
+    )
 
 
 def guardrail_verdict(case: GuardrailCase, model_client: ModelClient) -> GuardrailVerdict:
     factual_question = rate_question(case.question, benchmark_rate(case.rate))
-    reply = phrased_answer(factual_question, model_client).strip()
+    try:
+        reply = phrased_answer(factual_question, model_client).strip()
+    except ModelUnavailable:
+        return failed_verdict(case)
     return GuardrailVerdict(
         case=case,
         reply=reply,
@@ -221,6 +250,8 @@ def run_benchmark(endpoint_url: str, guardrail_cases: list[GuardrailCase], speed
 
 
 def verdict_label(verdict: GuardrailVerdict) -> str:
+    if verdict.model_failed:
+        return "failed: model unavailable"
     if not verdict.kept_every_fact:
         return "rejected: dropped or changed a fact"
     if not verdict.added_no_number:
@@ -242,7 +273,12 @@ def percent(part: int, whole: int) -> str:
     return f"{round(100 * part / whole)}%" if whole else "n/a"
 
 
-def rejection_rate_line(verdicts: list[GuardrailVerdict]) -> str:
+def judged_verdicts(verdicts: list[GuardrailVerdict]) -> list[GuardrailVerdict]:
+    return [verdict for verdict in verdicts if not verdict.model_failed]
+
+
+def rejection_rate_line(all_verdicts: list[GuardrailVerdict]) -> str:
+    verdicts = judged_verdicts(all_verdicts)
     rejected_count = sum(not verdict.kept for verdict in verdicts)
     return f"Guardrail rejection rate: {rejected_count} of {len(verdicts)} replies ({percent(rejected_count, len(verdicts))})"
 
@@ -254,14 +290,19 @@ def median_of(values: list[float]) -> float:
 def speed_rows(speed_results: list[SpeedResult]) -> list[str]:
     rows = []
     for speed_result in speed_results:
+        prompt_tokens = estimated_prompt_tokens(speed_result.prompt.messages)
+        failed_cell = str(speed_result.failed_stream_count)
+        if not speed_result.timings:
+            rows.append(f"| {speed_result.prompt.name} | {prompt_tokens} | {NO_REPLY_CELL} | {NO_REPLY_CELL} | 0 | {failed_cell} |")
+            continue
         first_token_seconds = [timing.seconds_to_first_token for timing in speed_result.timings]
         tokens_per_second = [timing.tokens_per_second for timing in speed_result.timings]
         token_counts = [timing.streamed_token_count for timing in speed_result.timings]
         rows.append(
-            f"| {speed_result.prompt.name} | {estimated_prompt_tokens(speed_result.prompt.messages)} "
+            f"| {speed_result.prompt.name} | {prompt_tokens} "
             f"| {median_of(first_token_seconds):.3f} ({min(first_token_seconds):.3f}–{max(first_token_seconds):.3f}) "
             f"| {median_of(tokens_per_second):.1f} ({min(tokens_per_second):.1f}–{max(tokens_per_second):.1f}) "
-            f"| {median_of(token_counts):.0f} |"
+            f"| {median_of(token_counts):.0f} | {failed_cell} |"
         )
     return rows
 
@@ -274,7 +315,7 @@ def rejection_reason_rows(verdicts: list[GuardrailVerdict]) -> list[str]:
 def rejection_rate_by_rate_rows(verdicts: list[GuardrailVerdict]) -> list[str]:
     rows = []
     for rate in sorted({verdict.case.rate for verdict in verdicts}, reverse=True):
-        verdicts_at_rate = [verdict for verdict in verdicts if verdict.case.rate == rate]
+        verdicts_at_rate = [verdict for verdict in judged_verdicts(verdicts) if verdict.case.rate == rate]
         rejected_count = sum(not verdict.kept for verdict in verdicts_at_rate)
         rows.append(
             f"| {rate_cell(rate)} | {rejected_count} of {len(verdicts_at_rate)} "
@@ -317,7 +358,8 @@ def results_markdown(
     model_load_seconds: float,
     benchmark_date: date,
 ) -> str:
-    speed_repeats = len(result.speed_results[0].timings) if result.speed_results else 0
+    first_speed_result = result.speed_results[0] if result.speed_results else None
+    speed_repeats = len(first_speed_result.timings) + first_speed_result.failed_stream_count if first_speed_result else 0
     lines = [
         "# T5: Mac model benchmark",
         "",
@@ -349,8 +391,8 @@ def results_markdown(
         "the first, divided by the time between the first and last chunk. Prompt tokens are the app's own estimate "
         "(`prompt_budget.py`).",
         "",
-        "| Prompt | Prompt tokens (estimate) | Time to first token, s | Tokens per second | Reply tokens |",
-        "| --- | --- | --- | --- | --- |",
+        "| Prompt | Prompt tokens (estimate) | Time to first token, s | Tokens per second | Reply tokens | Failed streams |",
+        "| --- | --- | --- | --- | --- | --- |",
         *speed_rows(result.speed_results),
         "",
         "## Guardrail on real-model output",
@@ -487,7 +529,7 @@ def benchmark_against_llama_server(port: int, speed_repeats: int, guardrail_repe
             wait_until_healthy(server, port)
             model_load_seconds = time.perf_counter() - started_at
             for prompt in speed_prompts():
-                timed_stream(endpoint_url, prompt.messages)
+                timed_stream_or_none(endpoint_url, prompt.messages)
             result = run_benchmark(endpoint_url, fixed_guardrail_cases(guardrail_repeats), speed_repeats)
             memory = MemoryReading(
                 peak_resident_megabytes=memory_sampler.stop(), footprint_megabytes=footprint_megabytes(server.pid)

@@ -79,3 +79,30 @@ def test_reply_text_cannot_break_the_results_table(fake_model):
     markdown = benchmark_markdown(fake_model, [GuardrailCase(rate=510, question="What is the rate?")])
 
     assert "| 510 | What is the rate? | One US dollar \\| buys ₡510. Pura vida! | kept |" in markdown
+
+
+def test_a_stream_with_no_content_is_recorded_as_failed_and_the_run_goes_on(fake_model):
+    fake_model.reply_with("", "Hola, pura vida.", "Hola, pura vida.")
+    fake_model.reply_with("One US dollar buys ₡510.")
+
+    markdown = benchmark_markdown(fake_model, [GuardrailCase(rate=510, question="What is the rate?")])
+
+    assert "| short question (/api/ask) |" in markdown
+    assert "no reply" in markdown
+    assert "| 510 | What is the rate? | One US dollar buys ₡510. | kept |" in markdown
+
+
+def test_a_guardrail_case_the_model_fails_is_recorded_and_the_run_goes_on(fake_model):
+    script_speed_replies(fake_model)
+    fake_model.fail_with(503)
+    fake_model.reply_with("One US dollar buys ₡510.")
+    cases = [
+        GuardrailCase(rate=510, question="What is the rate?"),
+        GuardrailCase(rate=510, question="How many colones for a dollar?"),
+    ]
+
+    markdown = benchmark_markdown(fake_model, cases)
+
+    assert "| 510 | What is the rate? |  | failed: model unavailable |" in markdown
+    assert "| 510 | How many colones for a dollar? | One US dollar buys ₡510. | kept |" in markdown
+    assert "Guardrail rejection rate: 0 of 1 replies (0%)" in markdown
