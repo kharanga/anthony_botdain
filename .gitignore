@@ -5,3 +5,7 @@ __pycache__/
 *.gguf
 *.hef
 *.zim
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+.claude/
