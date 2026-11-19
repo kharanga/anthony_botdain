@@ -20,6 +20,8 @@ ALWAYS_ALLOWED_CAPITALIZED_WORDS = frozenset({"i"})
 @dataclass(frozen=True)
 class Fact:
     spellings: tuple[str, ...]
+    number_written_next_to: tuple[str, ...] = ()
+    number_never_written_next_to: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -55,8 +57,45 @@ def text_mentions(text: str, spelling: str) -> bool:
     return re.search(whole_word_pattern(spelling), text, flags=re.IGNORECASE) is not None
 
 
+def text_around_each_number(text: str, number_spelling: str) -> list[tuple[str, str]]:
+    wanted_numbers = numbers_in(number_spelling)
+    return [
+        (text[: match.start()], text[match.end() :])
+        for match in NUMBER_PATTERN.finditer(text)
+        if numbers_in(match.group()) <= wanted_numbers
+    ]
+
+
+def unit_touches_number(text_before: str, text_after: str, unit: str) -> bool:
+    unit_pattern = whole_word_pattern(unit)
+    ends_with_unit = re.search(unit_pattern + r"\s*$", text_before, flags=re.IGNORECASE) is not None
+    starts_with_unit = re.match(r"\s*" + unit_pattern, text_after, flags=re.IGNORECASE) is not None
+    return ends_with_unit or starts_with_unit
+
+
+def any_unit_touches_number(text_before: str, text_after: str, units: tuple[str, ...]) -> bool:
+    return any(unit_touches_number(text_before, text_after, unit) for unit in units)
+
+
+def number_is_written_in_the_right_unit(reply: str, fact: Fact) -> bool:
+    numeric_spellings = [spelling for spelling in fact.spellings if is_numeric(spelling)]
+    surroundings = [around for spelling in numeric_spellings for around in text_around_each_number(reply, spelling)]
+    has_wanted_unit = not fact.number_written_next_to or any(
+        any_unit_touches_number(before, after, fact.number_written_next_to) for before, after in surroundings
+    )
+    has_forbidden_unit = any(
+        any_unit_touches_number(before, after, fact.number_never_written_next_to) for before, after in surroundings
+    )
+    return has_wanted_unit and not has_forbidden_unit
+
+
+def keeps_fact(reply: str, fact: Fact) -> bool:
+    mentioned = any(text_mentions(reply, spelling) for spelling in fact.spellings)
+    return mentioned and number_is_written_in_the_right_unit(reply, fact)
+
+
 def keeps_every_fact(reply: str, facts: tuple[Fact, ...]) -> bool:
-    return all(any(text_mentions(reply, spelling) for spelling in fact.spellings) for fact in facts)
+    return all(keeps_fact(reply, fact) for fact in facts)
 
 
 def source_texts(factual_question: FactualQuestion) -> list[str]:

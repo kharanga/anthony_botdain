@@ -107,3 +107,19 @@ def test_the_template_answer_is_given_when_the_model_is_unavailable(client, fake
 
     assert card["body"] == RATE_TEMPLATE_ANSWER
     assert "rate = 510 CRC per USD" in evidence_texts(card)
+
+
+def test_a_reply_that_inverts_the_rate_falls_back_to_the_template(client, fake_model):
+    fake_model.reply_with("One colón is worth 510 US dollars.")
+
+    card = asked_rate_card(client)
+
+    assert card["body"] == RATE_TEMPLATE_ANSWER
+
+
+def test_a_reply_that_puts_the_dollar_sign_on_the_rate_falls_back_to_the_template(client, fake_model):
+    fake_model.reply_with("You pay $510 for every ₡1.")
+
+    card = asked_rate_card(client)
+
+    assert card["body"] == RATE_TEMPLATE_ANSWER
