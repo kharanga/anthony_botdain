@@ -20,6 +20,7 @@
   form { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 1.2rem; }
   form input, form button { font-size: 1.2rem; padding: 8px 16px; }
   #pin-input { width: 6em; letter-spacing: 0.3em; }
+  .full-screen-button { display: block; font-size: 1.3rem; padding: 12px 16px; margin-top: 12px; width: 100%; }
   #message { color: #f99; font-size: 1.2rem; min-height: 1.4em; }
   [hidden] { display: none !important; }
 </style>
@@ -66,6 +67,11 @@
     document.getElementById("lock-form").hidden = state !== "unlocked";
   }
 
+  function appendFullScreenButton(parent, documentId) {
+    const button = appendTextElement(parent, "button", "Show full screen", "full-screen-button");
+    button.addEventListener("click", () => location.assign("/vault/full-screen/" + documentId));
+  }
+
   function renderVaultCard(card) {
     const container = document.getElementById("card");
     container.replaceChildren();
@@ -77,6 +83,7 @@
       photo.src = card.photo_url;
       photo.alt = card.title;
       container.appendChild(photo);
+      appendFullScreenButton(container, card.documents[0].id);
     } else if (card.documents.length) {
       const list = appendTextElement(container, "ul", "", "documents");
       for (const summary of card.documents) {
@@ -90,6 +97,54 @@
       appendTextElement(row, "div", item.source, "source");
     }
     showFormsFor(card.vault_state);
+    scheduleLockCheck(card);
+  }
+
+  const FALLBACK_LOCK_CHECK_SECONDS = 5;
+  const ACTIVITY_REPORT_MIN_GAP_MS = 10000;
+  let lockCheckTimer = null;
+  let lastActivityReportAt = 0;
+
+  function scheduleLockCheck(card) {
+    clearTimeout(lockCheckTimer);
+    if (card.vault_state !== "unlocked") return;
+    const seconds = card.locks_in_seconds ?? FALLBACK_LOCK_CHECK_SECONDS;
+    lockCheckTimer = setTimeout(checkLockState, Math.max(seconds, 1) * 1000);
+  }
+
+  function returnToPinScreenIfLocked(card) {
+    if (card.vault_state === "unlocked") {
+      scheduleLockCheck(card);
+      return;
+    }
+    renderVaultCard(card);
+    showMessage("Locked after 2 minutes of no use.");
+  }
+
+  async function checkLockState() {
+    try {
+      const response = await fetch("/api/vault/state");
+      returnToPinScreenIfLocked(await response.json());
+    } catch (error) {
+      lockCheckTimer = setTimeout(checkLockState, FALLBACK_LOCK_CHECK_SECONDS * 1000);
+    }
+  }
+
+  async function reportActivity() {
+    if (vaultState !== "unlocked") return;
+    const now = Date.now();
+    if (now - lastActivityReportAt < ACTIVITY_REPORT_MIN_GAP_MS) return;
+    lastActivityReportAt = now;
+    try {
+      const response = await fetch("/api/vault/activity", { method: "POST" });
+      returnToPinScreenIfLocked(await response.json());
+    } catch (error) {
+      showMessage("The app is not responding: " + error);
+    }
+  }
+
+  function checkLockStateWhenShownAgain() {
+    if (document.visibilityState === "visible" && vaultState === "unlocked") checkLockState();
   }
 
   async function showVaultCardAfter(request) {
@@ -154,6 +209,8 @@
   document.getElementById("pin-form").addEventListener("submit", submitPin);
   document.getElementById("add-document-form").addEventListener("submit", addDocument);
   document.getElementById("lock-form").addEventListener("submit", lockVault);
+  for (const eventName of ["pointerdown", "keydown", "wheel"]) document.addEventListener(eventName, reportActivity, { passive: true });
+  document.addEventListener("visibilitychange", checkLockStateWhenShownAgain);
   showVaultCardAfter(fetch("/api/vault"));
 </script>
 </body>

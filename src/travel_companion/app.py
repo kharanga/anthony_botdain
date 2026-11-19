@@ -1,15 +1,18 @@
+import time
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
 from travel_companion.ask import ask_router
+from travel_companion.brightness import brightness_backend_from_config
 from travel_companion.cards import AnswerCard, Evidence
 from travel_companion.config import DEFAULT_CONFIG_PATH, Config, load_config
 from travel_companion.database import set_up_database
+from travel_companion.full_screen import FullScreenView, full_screen_router
 from travel_companion.model_client import ModelClient
 from travel_companion.rate import CurrentRate, current_rate, rate_evidence, rate_router
-from travel_companion.vault import VaultSession, vault_router
+from travel_companion.vault import Clock, VaultSession, vault_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -30,7 +33,7 @@ def status_card(config: Config, config_path: Path, rate: CurrentRate) -> AnswerC
     )
 
 
-def create_app(config_path: Path = DEFAULT_CONFIG_PATH) -> FastAPI:
+def create_app(config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.monotonic) -> FastAPI:
     config = load_config(config_path)
     database_path = set_up_database(config.data_dir)
     app = FastAPI(title="travel-companion")
@@ -44,8 +47,11 @@ def create_app(config_path: Path = DEFAULT_CONFIG_PATH) -> FastAPI:
 
     app.include_router(rate_router(database_path, config.rate, config_path))
 
-    app.state.vault_session = VaultSession()
+    app.state.vault_session = VaultSession(clock)
     app.include_router(vault_router(database_path, app.state.vault_session))
+
+    app.state.full_screen_view = FullScreenView(brightness_backend_from_config(config.brightness_backend, config.backlight_dir))
+    app.include_router(full_screen_router(database_path, app.state.vault_session, app.state.full_screen_view))
 
     @app.get("/")
     def get_ui_shell() -> FileResponse:

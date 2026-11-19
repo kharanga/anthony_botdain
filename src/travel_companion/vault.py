@@ -1,6 +1,9 @@
 import base64
 import binascii
 import json
+import math
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated, Literal
@@ -14,6 +17,9 @@ from travel_companion.database import connect
 from travel_companion.vault_crypto import key_check_for, key_from_pin, key_matches_check, new_salt, open_sealed, seal
 
 VaultState = Literal["needs_pin", "locked", "unlocked"]
+Clock = Callable[[], float]
+
+IDLE_LOCK_SECONDS = 120
 
 VAULT_PAGE_PATH = Path(__file__).resolve().parent / "static" / "vault.html"
 DOCUMENT_PURPOSE = b"vault-document"
@@ -27,17 +33,35 @@ VAULT_SCHEMA_STATEMENTS = [
 
 
 class VaultSession:
-    def __init__(self) -> None:
+    def __init__(self, clock: Clock = time.monotonic, idle_lock_seconds: float = IDLE_LOCK_SECONDS) -> None:
         self._key: bytes | None = None
+        self._clock = clock
+        self._idle_lock_seconds = idle_lock_seconds
+        self._last_use_at = clock()
 
     def unlock(self, key: bytes) -> None:
         self._key = key
+        self._last_use_at = self._clock()
 
     def lock(self) -> None:
         self._key = None
 
+    def _lock_if_idle_too_long(self) -> None:
+        if self._key is not None and self.locks_in_seconds() <= 0:
+            self.lock()
+
+    def locks_in_seconds(self) -> float:
+        return self._idle_lock_seconds - (self._clock() - self._last_use_at)
+
     def unlocked_key(self) -> bytes | None:
+        self._lock_if_idle_too_long()
         return self._key
+
+    def key_for_use(self) -> bytes | None:
+        key = self.unlocked_key()
+        if key is not None:
+            self._last_use_at = self._clock()
+        return key
 
 
 @dataclass(frozen=True)
@@ -67,6 +91,11 @@ class VaultCard(AnswerCard):
     vault_state: VaultState
     documents: list[VaultDocumentSummary]
     photo_url: str | None = None
+    locks_in_seconds: int | None = None
+
+
+def whole_seconds_until_lock(session: VaultSession) -> int:
+    return max(0, math.ceil(session.locks_in_seconds()))
 
 
 def set_up_vault_tables(database_path: Path) -> None:
@@ -191,16 +220,19 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
     set_up_vault_tables(database_path)
     router = APIRouter()
 
-    def current_vault_card() -> VaultCard:
+    def vault_card_for(key: bytes | None) -> VaultCard:
         if stored_pin_salt_and_check(database_path) is None:
             return needs_pin_card(database_path)
-        key = session.unlocked_key()
         if key is None:
             return locked_card(database_path)
-        return unlocked_card(database_path, all_documents(database_path, key))
+        card = unlocked_card(database_path, all_documents(database_path, key))
+        return card.model_copy(update={"locks_in_seconds": whole_seconds_until_lock(session)})
+
+    def current_vault_card() -> VaultCard:
+        return vault_card_for(session.key_for_use())
 
     def key_or_locked_error() -> bytes:
-        key = session.unlocked_key()
+        key = session.key_for_use()
         if key is None:
             raise HTTPException(status_code=HTTP_LOCKED, detail=locked_card(database_path).model_dump())
         return key
@@ -245,6 +277,14 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
     @router.post("/api/vault/lock")
     def post_lock() -> VaultCard:
         session.lock()
+        return current_vault_card()
+
+    @router.get("/api/vault/state")
+    def get_vault_state() -> VaultCard:
+        return vault_card_for(session.unlocked_key())
+
+    @router.post("/api/vault/activity")
+    def post_activity() -> VaultCard:
         return current_vault_card()
 
     @router.post("/api/vault/documents")

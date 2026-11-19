@@ -10,3 +10,9 @@ data_dir = "data"
 [model]
 # OpenAI-compatible chat-completions endpoint (ADR 0001). llama.cpp's llama-server on the Mac.
 endpoint_url = "http://127.0.0.1:8080/v1/chat/completions"
+
+[display]
+# "recording" keeps brightness in memory (Mac, tests). "sysfs" drives the Pi Touch Display 2 backlight.
+brightness_backend = "recording"
+# Backlight folder for "sysfs". Empty picks the first device under /sys/class/backlight.
+backlight_dir = ""
