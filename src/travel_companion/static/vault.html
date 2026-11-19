@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>travel-companion vault</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #111; color: #eee; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px; }
+  a { color: #9cf; font-size: 1.2rem; }
+  .card { background: #1d1d1d; border-radius: 12px; padding: 20px; margin-top: 16px; }
+  .card h2 { margin: 0 0 8px; font-size: 1.6rem; }
+  .card p { font-size: 1.2rem; line-height: 1.4; }
+  .card img { max-width: 100%; background: #fff; border-radius: 8px; }
+  .evidence { margin: 16px 0 0; padding: 12px 0 0; border-top: 1px solid #333; list-style: none; color: #aaa; }
+  .evidence li { margin: 4px 0; }
+  .evidence .source { color: #777; font-size: 0.85rem; }
+  .documents { list-style: none; padding: 0; }
+  .documents button { font-size: 1.3rem; padding: 12px 16px; margin: 4px 0; width: 100%; text-align: left; }
+  form { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 1.2rem; }
+  form input, form button { font-size: 1.2rem; padding: 8px 16px; }
+  #pin-input { width: 6em; letter-spacing: 0.3em; }
+  #message { color: #f99; font-size: 1.2rem; min-height: 1.4em; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <a href="/">Home</a>
+  <section id="card" class="card"><p>Loading…</p></section>
+  <p id="message"></p>
+  <form id="pin-form" hidden>
+    <label for="pin-input">PIN</label>
+    <input id="pin-input" name="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" required>
+    <button type="submit" id="pin-button">Unlock</button>
+  </form>
+  <form id="add-document-form" hidden>
+    <input id="document-label" name="label" type="text" placeholder="Label, e.g. Boarding pass" required>
+    <input id="document-photo" name="photo" type="file" accept="image/*" capture="environment" required>
+    <button type="submit">Add document</button>
+  </form>
+  <form id="lock-form" hidden>
+    <button type="submit">Lock vault</button>
+  </form>
+</main>
+<script>
+  let vaultState = "locked";
+
+  function appendTextElement(parent, tagName, text, className) {
+    const element = document.createElement(tagName);
+    element.textContent = text;
+    if (className) element.className = className;
+    parent.appendChild(element);
+    return element;
+  }
+
+  function showMessage(text) {
+    document.getElementById("message").textContent = text;
+  }
+
+  function showFormsFor(state) {
+    vaultState = state;
+    document.getElementById("pin-form").hidden = state === "unlocked";
+    document.getElementById("pin-button").textContent = state === "needs_pin" ? "Set PIN" : "Unlock";
+    document.getElementById("add-document-form").hidden = state !== "unlocked";
+    document.getElementById("lock-form").hidden = state !== "unlocked";
+  }
+
+  function renderVaultCard(card) {
+    const container = document.getElementById("card");
+    container.replaceChildren();
+    container.dataset.kind = card.kind;
+    appendTextElement(container, "h2", card.title);
+    appendTextElement(container, "p", card.body);
+    if (card.photo_url) {
+      const photo = document.createElement("img");
+      photo.src = card.photo_url;
+      photo.alt = card.title;
+      container.appendChild(photo);
+    } else if (card.documents.length) {
+      const list = appendTextElement(container, "ul", "", "documents");
+      for (const summary of card.documents) {
+        const button = appendTextElement(appendTextElement(list, "li", ""), "button", summary.label);
+        button.addEventListener("click", () => showVaultCardAfter(fetch("/api/vault/documents/" + summary.id)));
+      }
+    }
+    const evidenceList = appendTextElement(container, "ul", "", "evidence");
+    for (const item of card.evidence) {
+      const row = appendTextElement(evidenceList, "li", item.text);
+      appendTextElement(row, "div", item.source, "source");
+    }
+    showFormsFor(card.vault_state);
+  }
+
+  async function showVaultCardAfter(request) {
+    try {
+      const response = await request;
+      const body = await response.json();
+      if (response.status === 401) showMessage("Wrong PIN.");
+      else if (response.status === 422) showMessage("Enter exactly 6 digits.");
+      else if (!response.ok && typeof body.detail === "string") showMessage(body.detail);
+      else showMessage("");
+      const card = response.ok ? body : body.detail;
+      if (card && card.kind === "vault") renderVaultCard(card);
+      else if (!response.ok) showVaultCardAfter(fetch("/api/vault"));
+    } catch (error) {
+      showMessage("The app is not responding: " + error);
+    }
+  }
+
+  function postJson(url, payload) {
+    return fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  function submitPin(event) {
+    event.preventDefault();
+    const pinInput = document.getElementById("pin-input");
+    const url = vaultState === "needs_pin" ? "/api/vault/pin" : "/api/vault/unlock";
+    showVaultCardAfter(postJson(url, { pin: pinInput.value }));
+    pinInput.value = "";
+  }
+
+  function photoAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",", 2)[1]);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function addDocument(event) {
+    event.preventDefault();
+    const file = document.getElementById("document-photo").files[0];
+    const label = document.getElementById("document-label").value;
+    const photoBase64 = await photoAsBase64(file);
+    showVaultCardAfter(postJson("/api/vault/documents", {
+      label: label,
+      content_type: file.type || "image/jpeg",
+      photo_base64: photoBase64,
+    }));
+    event.target.reset();
+  }
+
+  function lockVault(event) {
+    event.preventDefault();
+    showVaultCardAfter(fetch("/api/vault/lock", { method: "POST" }));
+  }
+
+  document.getElementById("pin-form").addEventListener("submit", submitPin);
+  document.getElementById("add-document-form").addEventListener("submit", addDocument);
+  document.getElementById("lock-form").addEventListener("submit", lockVault);
+  showVaultCardAfter(fetch("/api/vault"));
+</script>
+</body>
+</html>

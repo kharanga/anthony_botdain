@@ -1,0 +1,269 @@
+import base64
+import binascii
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Annotated, Literal
+
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+
+from travel_companion.cards import AnswerCard, Evidence
+from travel_companion.database import connect
+from travel_companion.vault_crypto import key_check_for, key_from_pin, key_matches_check, new_salt, open_sealed, seal
+
+VaultState = Literal["needs_pin", "locked", "unlocked"]
+
+VAULT_PAGE_PATH = Path(__file__).resolve().parent / "static" / "vault.html"
+DOCUMENT_PURPOSE = b"vault-document"
+HTTP_LOCKED = 423
+
+VAULT_SCHEMA_STATEMENTS = [
+    "CREATE TABLE IF NOT EXISTS vault_pin (id INTEGER PRIMARY KEY CHECK (id = 1), salt BLOB NOT NULL, key_check BLOB NOT NULL)",
+    "CREATE SEQUENCE IF NOT EXISTS vault_document_ids START 1",
+    "CREATE TABLE IF NOT EXISTS vault_documents (id INTEGER PRIMARY KEY DEFAULT nextval('vault_document_ids'), sealed_document BLOB NOT NULL)",
+]
+
+
+class VaultSession:
+    def __init__(self) -> None:
+        self._key: bytes | None = None
+
+    def unlock(self, key: bytes) -> None:
+        self._key = key
+
+    def lock(self) -> None:
+        self._key = None
+
+    def unlocked_key(self) -> bytes | None:
+        return self._key
+
+
+@dataclass(frozen=True)
+class VaultDocument:
+    id: int
+    label: str
+    content_type: str
+    photo: bytes
+
+
+class PinEntry(BaseModel):
+    pin: Annotated[str, Field(pattern=r"^[0-9]{6}$")]
+
+
+class NewDocument(BaseModel):
+    label: Annotated[str, Field(min_length=1, max_length=200)]
+    content_type: Annotated[str, Field(pattern=r"^image/[a-z0-9.+-]+$")]
+    photo_base64: Annotated[str, Field(min_length=1)]
+
+
+class VaultDocumentSummary(BaseModel):
+    id: int
+    label: str
+
+
+class VaultCard(AnswerCard):
+    vault_state: VaultState
+    documents: list[VaultDocumentSummary]
+    photo_url: str | None = None
+
+
+def set_up_vault_tables(database_path: Path) -> None:
+    with connect(database_path) as connection:
+        for statement in VAULT_SCHEMA_STATEMENTS:
+            connection.execute(statement)
+
+
+def stored_pin_salt_and_check(database_path: Path) -> tuple[bytes, bytes] | None:
+    with connect(database_path) as connection:
+        row = connection.execute("SELECT vault_pin.salt, vault_pin.key_check FROM vault_pin WHERE vault_pin.id = 1").fetchone()
+    return None if row is None else (bytes(row[0]), bytes(row[1]))
+
+
+def store_pin_salt_and_check(database_path: Path, salt: bytes, key_check: bytes) -> None:
+    with connect(database_path) as connection:
+        connection.execute("INSERT INTO vault_pin (id, salt, key_check) VALUES (1, ?, ?)", [salt, key_check])
+
+
+def sealed_document_bytes(key: bytes, label: str, content_type: str, photo: bytes) -> bytes:
+    plaintext = json.dumps(
+        {"label": label, "content_type": content_type, "photo_base64": base64.b64encode(photo).decode()}
+    ).encode()
+    return seal(key, plaintext, DOCUMENT_PURPOSE)
+
+
+def opened_document(key: bytes, document_id: int, sealed_document: bytes) -> VaultDocument:
+    fields = json.loads(open_sealed(key, sealed_document, DOCUMENT_PURPOSE))
+    return VaultDocument(
+        id=document_id,
+        label=fields["label"],
+        content_type=fields["content_type"],
+        photo=base64.b64decode(fields["photo_base64"]),
+    )
+
+
+def store_sealed_document(database_path: Path, sealed_document: bytes) -> int:
+    with connect(database_path) as connection:
+        row = connection.execute(
+            "INSERT INTO vault_documents (sealed_document) VALUES (?) RETURNING vault_documents.id", [sealed_document]
+        ).fetchone()
+    return row[0]
+
+
+def all_documents(database_path: Path, key: bytes) -> list[VaultDocument]:
+    with connect(database_path) as connection:
+        rows = connection.execute(
+            "SELECT vault_documents.id, vault_documents.sealed_document FROM vault_documents ORDER BY vault_documents.id"
+        ).fetchall()
+    return [opened_document(key, document_id, bytes(sealed)) for document_id, sealed in rows]
+
+
+def one_document(database_path: Path, key: bytes, document_id: int) -> VaultDocument | None:
+    with connect(database_path) as connection:
+        row = connection.execute(
+            "SELECT vault_documents.sealed_document FROM vault_documents WHERE vault_documents.id = ?", [document_id]
+        ).fetchone()
+    return None if row is None else opened_document(key, document_id, bytes(row[0]))
+
+
+def photo_from_base64(photo_base64: str) -> bytes:
+    try:
+        return base64.b64decode(photo_base64, validate=True)
+    except binascii.Error as error:
+        raise HTTPException(status_code=422, detail="photo_base64 is not valid base64.") from error
+
+
+def vault_tables_source(database_path: Path) -> str:
+    return f"{database_path} (vault tables)"
+
+
+def photo_url_for(document_id: int) -> str:
+    return f"/api/vault/documents/{document_id}/photo"
+
+
+def needs_pin_card(database_path: Path) -> VaultCard:
+    return VaultCard(
+        kind="vault",
+        title="Set a vault PIN",
+        body="Choose a 6-digit PIN to protect your documents.",
+        evidence=[Evidence(source=vault_tables_source(database_path), text="no vault PIN set yet")],
+        vault_state="needs_pin",
+        documents=[],
+    )
+
+
+def locked_card(database_path: Path) -> VaultCard:
+    return VaultCard(
+        kind="vault",
+        title="Vault locked",
+        body="Enter your 6-digit PIN to open your documents.",
+        evidence=[Evidence(source=vault_tables_source(database_path), text="documents are encrypted under the PIN")],
+        vault_state="locked",
+        documents=[],
+    )
+
+
+def unlocked_card(database_path: Path, documents: list[VaultDocument]) -> VaultCard:
+    return VaultCard(
+        kind="vault",
+        title="Vault",
+        body=f"{len(documents)} documents.",
+        evidence=[Evidence(source=vault_tables_source(database_path), text=f"{len(documents)} encrypted documents")],
+        vault_state="unlocked",
+        documents=[VaultDocumentSummary(id=document.id, label=document.label) for document in documents],
+    )
+
+
+def document_card(database_path: Path, document: VaultDocument) -> VaultCard:
+    return VaultCard(
+        kind="vault",
+        title=document.label,
+        body=f"Document photo ({document.content_type}).",
+        evidence=[Evidence(source=f"{vault_tables_source(database_path)} document {document.id}", text=document.label)],
+        vault_state="unlocked",
+        documents=[VaultDocumentSummary(id=document.id, label=document.label)],
+        photo_url=photo_url_for(document.id),
+    )
+
+
+def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
+    set_up_vault_tables(database_path)
+    router = APIRouter()
+
+    def current_vault_card() -> VaultCard:
+        if stored_pin_salt_and_check(database_path) is None:
+            return needs_pin_card(database_path)
+        key = session.unlocked_key()
+        if key is None:
+            return locked_card(database_path)
+        return unlocked_card(database_path, all_documents(database_path, key))
+
+    def key_or_locked_error() -> bytes:
+        key = session.unlocked_key()
+        if key is None:
+            raise HTTPException(status_code=HTTP_LOCKED, detail=locked_card(database_path).model_dump())
+        return key
+
+    def document_or_not_found(key: bytes, document_id: int) -> VaultDocument:
+        document = one_document(database_path, key, document_id)
+        if document is None:
+            raise HTTPException(status_code=404, detail="No such document in the vault.")
+        return document
+
+    @router.get("/vault")
+    def get_vault_page() -> FileResponse:
+        return FileResponse(VAULT_PAGE_PATH)
+
+    @router.get("/api/vault")
+    def get_vault() -> VaultCard:
+        return current_vault_card()
+
+    @router.post("/api/vault/pin")
+    def post_pin(entry: PinEntry) -> VaultCard:
+        if stored_pin_salt_and_check(database_path) is not None:
+            raise HTTPException(status_code=409, detail="The vault PIN is already set.")
+        salt = new_salt()
+        key = key_from_pin(entry.pin, salt)
+        store_pin_salt_and_check(database_path, salt, key_check_for(key))
+        session.unlock(key)
+        return current_vault_card()
+
+    @router.post("/api/vault/unlock")
+    def post_unlock(entry: PinEntry) -> VaultCard:
+        salt_and_check = stored_pin_salt_and_check(database_path)
+        if salt_and_check is None:
+            raise HTTPException(status_code=409, detail=needs_pin_card(database_path).model_dump())
+        salt, key_check = salt_and_check
+        key = key_from_pin(entry.pin, salt)
+        if not key_matches_check(key, key_check):
+            session.lock()
+            raise HTTPException(status_code=401, detail=locked_card(database_path).model_dump())
+        session.unlock(key)
+        return current_vault_card()
+
+    @router.post("/api/vault/lock")
+    def post_lock() -> VaultCard:
+        session.lock()
+        return current_vault_card()
+
+    @router.post("/api/vault/documents")
+    def post_document(new_document: NewDocument) -> VaultCard:
+        key = key_or_locked_error()
+        photo = photo_from_base64(new_document.photo_base64)
+        sealed = sealed_document_bytes(key, new_document.label, new_document.content_type, photo)
+        document_id = store_sealed_document(database_path, sealed)
+        return document_card(database_path, document_or_not_found(key, document_id))
+
+    @router.get("/api/vault/documents/{document_id}")
+    def get_document(document_id: int) -> VaultCard:
+        key = key_or_locked_error()
+        return document_card(database_path, document_or_not_found(key, document_id))
+
+    @router.get("/api/vault/documents/{document_id}/photo")
+    def get_document_photo(document_id: int) -> Response:
+        key = key_or_locked_error()
+        document = document_or_not_found(key, document_id)
+        return Response(content=document.photo, media_type=document.content_type, headers={"Cache-Control": "no-store"})
+
+    return router

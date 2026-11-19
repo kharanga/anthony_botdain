@@ -9,6 +9,7 @@ from travel_companion.config import DEFAULT_CONFIG_PATH, Config, load_config
 from travel_companion.database import set_up_database
 from travel_companion.model_client import ModelClient
 from travel_companion.rate import CurrentRate, current_rate, rate_evidence, rate_router
+from travel_companion.vault import VaultSession, vault_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
@@ -42,6 +43,9 @@ def create_app(config_path: Path = DEFAULT_CONFIG_PATH) -> FastAPI:
         return status_card(config, config_path, current_rate(database_path, config.rate, config_path))
 
     app.include_router(rate_router(database_path, config.rate, config_path))
+
+    app.state.vault_session = VaultSession()
+    app.include_router(vault_router(database_path, app.state.vault_session))
 
     @app.get("/")
     def get_ui_shell() -> FileResponse:
