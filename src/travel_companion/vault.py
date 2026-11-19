@@ -24,6 +24,12 @@ IDLE_LOCK_SECONDS = 120
 VAULT_PAGE_PATH = Path(__file__).resolve().parent / "static" / "vault.html"
 DOCUMENT_PURPOSE = b"vault-document"
 HTTP_LOCKED = 423
+PHOTO_RESPONSE_HEADERS = {
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "sandbox",
+}
+PhotoContentType = Literal["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]
 
 VAULT_SCHEMA_STATEMENTS = [
     "CREATE TABLE IF NOT EXISTS vault_pin (id INTEGER PRIMARY KEY CHECK (id = 1), salt BLOB NOT NULL, key_check BLOB NOT NULL)",
@@ -78,7 +84,7 @@ class PinEntry(BaseModel):
 
 class NewDocument(BaseModel):
     label: Annotated[str, Field(min_length=1, max_length=200)]
-    content_type: Annotated[str, Field(pattern=r"^image/[a-z0-9.+-]+$")]
+    content_type: PhotoContentType
     photo_base64: Annotated[str, Field(min_length=1)]
 
 
@@ -304,6 +310,6 @@ def vault_router(database_path: Path, session: VaultSession) -> APIRouter:
     def get_document_photo(document_id: int) -> Response:
         key = key_or_locked_error()
         document = document_or_not_found(key, document_id)
-        return Response(content=document.photo, media_type=document.content_type, headers={"Cache-Control": "no-store"})
+        return Response(content=document.photo, media_type=document.content_type, headers=PHOTO_RESPONSE_HEADERS)
 
     return router

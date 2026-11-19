@@ -189,3 +189,25 @@ def test_vault_page_asks_for_the_pin_and_adds_documents(client):
     assert 'id="pin-form"' in response.text
     assert 'id="add-document-form"' in response.text
 
+
+def test_an_svg_document_is_refused(client):
+    client.post("/api/vault/pin", json={"pin": PIN})
+    svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+
+    response = client.post(
+        "/api/vault/documents",
+        json={"label": "Not a photo", "content_type": "image/svg+xml", "photo_base64": base64.b64encode(svg).decode()},
+    )
+
+    assert response.status_code == 422
+    assert client.get("/api/vault").json()["documents"] == []
+
+
+def test_a_document_photo_is_served_so_it_cannot_run_script(client):
+    photo_url = vault_with_specimen_document(client)["photo_url"]
+
+    response = client.get(photo_url)
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["content-security-policy"] == "sandbox"
+
