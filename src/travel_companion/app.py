@@ -15,6 +15,7 @@ from travel_companion.dish_lookup import dish_lookup_router
 from travel_companion.full_screen import FullScreenView, full_screen_router
 from travel_companion.intent_router import intent_router
 from travel_companion.model_client import ModelClient
+from travel_companion.speech_to_text import Transcriber, speech_router, whisper_transcriber
 from travel_companion.ocr import ocr_engine_from_config
 from travel_companion.photo_ocr import photo_ocr_router
 from travel_companion.rate import CurrentRate, current_rate, rate_evidence, rate_router
@@ -41,7 +42,9 @@ def status_card(config: Config, config_path: Path, rate: CurrentRate, country_pa
     )
 
 
-def create_app(config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.monotonic) -> FastAPI:
+def create_app(
+    config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.monotonic, transcriber: Transcriber | None = None
+) -> FastAPI:
     config = load_config(config_path)
     country_pack = load_country_pack(config.packs_dir, config.country, config.active_allergens)
     database_path = set_up_database(config.data_dir)
@@ -51,6 +54,7 @@ def create_app(config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.mono
     app.state.model_client = ModelClient(config.model_endpoint_url)
     app.include_router(ask_router)
     app.include_router(intent_router)
+    app.include_router(speech_router(transcriber or whisper_transcriber(config.whisper_cli, config.whisper_model_path)))
     app.include_router(allergen_terms_router)
     app.include_router(dish_lookup_router)
     app.state.ocr_engine = ocr_engine_from_config(config.ocr_engine, config.ocr_language)

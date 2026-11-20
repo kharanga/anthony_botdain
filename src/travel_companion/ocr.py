@@ -1,7 +1,10 @@
 import csv
 import io
+import os
+import shutil
 import subprocess
 from dataclasses import dataclass
+from functools import cached_property
 from typing import Protocol
 
 TESSERACT_WORD_LEVEL = "5"
@@ -15,6 +18,10 @@ class OcrLine:
 
 
 class UnreadablePhoto(Exception):
+    pass
+
+
+class EngineUnavailable(Exception):
     pass
 
 
@@ -63,6 +70,8 @@ class TesseractEngine:
     name: str = "tesseract"
 
     def read_lines(self, photo_bytes: bytes) -> list[OcrLine]:
+        if shutil.which("tesseract") is None:
+            raise EngineUnavailable("the tesseract CLI is not on PATH: brew install tesseract tesseract-lang")
         completed = subprocess.run(
             ["tesseract", "stdin", "stdout", "-l", self.language, "tsv"],
             input=photo_bytes,
@@ -73,7 +82,55 @@ class TesseractEngine:
         return lines_from_words(tesseract_words(completed.stdout.decode()))
 
 
-OCR_ENGINES_BY_NAME = {"tesseract": TesseractEngine}
+PADDLEOCR_LANGUAGE_BY_TESSERACT_LANGUAGE = {"spa": "es", "eng": "en", "vie": "vi"}
+PADDLEOCR_SKIP_MODEL_HOSTER_CHECK = "PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK"
+PADDLEOCR_NOT_INSTALLED ="PaddleOCR is not installed: .venv/bin/pip install -e '.[paddleocr]'"
+
+
+def paddleocr_language(language: str) -> str:
+    return PADDLEOCR_LANGUAGE_BY_TESSERACT_LANGUAGE.get(language, language)
+
+
+def decoded_image(photo_bytes: bytes):
+    import cv2
+    import numpy
+
+    image = cv2.imdecode(numpy.frombuffer(photo_bytes, dtype=numpy.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        raise UnreadablePhoto("the photo could not be decoded as an image")
+    return image
+
+
+@dataclass(frozen=True)
+class PaddleOcrEngine:
+    language: str = "spa"
+    name: str = "paddleocr"
+
+    @cached_property
+    def pipeline(self):
+        os.environ.setdefault(PADDLEOCR_SKIP_MODEL_HOSTER_CHECK, "True")
+        try:
+            from paddleocr import PaddleOCR
+        except ImportError as missing:
+            raise EngineUnavailable(PADDLEOCR_NOT_INSTALLED) from missing
+        return PaddleOCR(
+            lang=paddleocr_language(self.language),
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+        )
+
+    def read_lines(self, photo_bytes: bytes) -> list[OcrLine]:
+        pipeline = self.pipeline
+        return [
+            OcrLine(text=text.strip(), confidence=round(score * 100, 1))
+            for page in pipeline.predict(decoded_image(photo_bytes))
+            for text, score in zip(page["rec_texts"], page["rec_scores"])
+            if text.strip()
+        ]
+
+
+OCR_ENGINES_BY_NAME = {"tesseract": TesseractEngine, "paddleocr": PaddleOcrEngine}
 
 
 def ocr_engine_from_config(engine_name: str, language: str) -> OcrEngine:
