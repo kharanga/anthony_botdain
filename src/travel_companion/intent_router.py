@@ -7,7 +7,10 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from travel_companion.cards import AnswerCard, Evidence
+from travel_companion.chat_message import ChatMessage
 from travel_companion.country_pack import CountryPack
+from travel_companion.model_client import ModelClient, ModelUnavailable
+from travel_companion.prompt_budget import PromptTooLong
 from travel_companion.spoken_amount import UNIT_WORD_VALUES, spoken_amount_in
 from travel_companion.staff_phrase import StaffPhraseCard, UnknownPhrase, staff_phrase_card
 
@@ -31,6 +34,7 @@ INTENT_TITLES: dict[str, str] = {
 
 TRANSCRIPT_SOURCE = "transcript"
 INTENT_RULE_SOURCE = "intent rule"
+INTENT_MODEL_SOURCE = "intent model"
 
 
 class IntentCard(AnswerCard):
@@ -43,6 +47,7 @@ class RoutedIntent:
     intent: IntentName
     rule: str
     details: dict[str, str] = field(default_factory=dict)
+    evidence_source: str = INTENT_RULE_SOURCE
 
 
 def normalised_transcript(transcript: str) -> str:
@@ -273,9 +278,34 @@ GUIDE_QUESTION_START_PATTERN = (
 )
 
 
+TRAVEL_TOPIC_WORDS = (
+    "beach", "volcano", "park", "national park", "reserve", "forest", "river", "waterfall", "lake", "island",
+    "mountain", "trail", "hike", "hiking", "wildlife", "sloth", "monkey", "bird", "turtle", "whale",
+    "season", "weather", "rain", "climate", "water", "visa", "passport", "border", "customs", "vaccine",
+    "mosquito", "taxi", "bus", "shuttle", "ferry", "train", "airport", "flight", "car", "drive", "road",
+    "hotel", "hostel", "lodge", "restaurant", "eat", "food", "dish", "tour", "surf", "snorkel", "dive",
+    "town", "city", "village", "country", "place", "visit", "see", "get to", "tip", "tipping", "currency",
+    "colones", "dollars", "atm", "bank", "hospital", "pharmacy", "clinic", "police", "embassy", "festival",
+)
+WORDS_CAPITALISED_WITHOUT_NAMING_A_PLACE = frozenset({"I", "I'm", "I'd", "I've", "I'll", "OK"})
+
+
+def names_a_place(transcript: str) -> bool:
+    later_words = re.findall(r"[^\W\d_][\w'’]*", transcript)[1:]
+    return any(
+        word[0].isupper() and word not in WORDS_CAPITALISED_WITHOUT_NAMING_A_PLACE for word in later_words
+    )
+
+
+def names_a_travel_topic(text: str) -> bool:
+    return any(mentions_word(text, word) for word in TRAVEL_TOPIC_WORDS)
+
+
 def guide_question_intent(text: str, transcript: str) -> RoutedIntent | None:
     matched = re.search(GUIDE_QUESTION_START_PATTERN, text)
     if matched is None and not text.endswith("?"):
+        return None
+    if not names_a_place(transcript) and not names_a_travel_topic(text):
         return None
     rule = f"guide question: {matched.group() if matched else '?'}"
     return RoutedIntent("guide_question", rule, {"question": transcript.strip()})
@@ -310,30 +340,97 @@ def intent_card(transcript: str, routed: RoutedIntent) -> IntentCard:
         body=details_sentence(routed.details),
         evidence=[
             Evidence(source=TRANSCRIPT_SOURCE, text=transcript),
-            Evidence(source=INTENT_RULE_SOURCE, text=routed.rule),
+            Evidence(source=routed.evidence_source, text=routed.rule),
         ],
         intent=routed.intent,
         details=routed.details,
     )
 
 
-def unsupported_intent_card(transcript: str) -> IntentCard:
+def unsupported_intent_card(transcript: str, model_evidence: list[Evidence] | None = None) -> IntentCard:
     supported_list = "\n".join(f"- {title}" for title in INTENT_TITLES.values())
     return IntentCard(
         kind="unsupported_intent",
         title="I can't do that yet",
         body=f"I can't do that yet. I can:\n{supported_list}",
-        evidence=[Evidence(source=TRANSCRIPT_SOURCE, text=transcript)],
+        evidence=[Evidence(source=TRANSCRIPT_SOURCE, text=transcript), *(model_evidence or [])],
         intent=None,
         details={},
     )
 
 
-def route_transcript(transcript: str) -> IntentCard:
-    routed = rule_routed_intent(transcript)
-    if routed is None:
-        return unsupported_intent_card(transcript)
+NO_INTENT_LABEL = "none"
+INTENT_LABEL_EXAMPLES = {
+    "show_staff_phrase": "show my allergy card",
+    "menu_allergen_question": "does the third one have shrimp?",
+    "guide_question": "where can I see sloths near La Fortuna?",
+    "add_expense": "I spent five mil on a taxi",
+    "spending_question": "how much have I spent on food?",
+    "open_vault": "show my boarding pass",
+}
+INTENT_LABEL_CHARACTERS_TO_STRIP = " \t\n\"'`.!"
+
+
+def intent_label_system_prompt() -> str:
+    label_lines = "\n".join(f"{label}: e.g. \"{example}\"" for label, example in INTENT_LABEL_EXAMPLES.items())
+    return (
+        "You route a traveller's spoken request to one intent. The intents are:\n"
+        f"{label_lines}\n"
+        f"Reply with exactly one label from that list, or {NO_INTENT_LABEL} if none fits. Reply with the label only."
+    )
+
+
+def intent_label_from_reply(reply: str) -> IntentName | None:
+    label = reply.strip(INTENT_LABEL_CHARACTERS_TO_STRIP).lower()
+    if label in INTENT_TITLES:
+        return label
+    return None
+
+
+def model_details_for(intent: IntentName, transcript: str) -> dict[str, str]:
+    text = normalised_transcript(transcript)
+    if intent == "guide_question":
+        return {"question": transcript.strip()}
+    if intent == "show_staff_phrase":
+        return {"phrase": staff_phrase_name(text)}
+    if intent == "spending_question":
+        return details_without_blanks(category=expense_category_in(text), period=spending_period_in(text))
+    if intent == "add_expense":
+        spoken_amount = spoken_amount_in(text)
+        return details_without_blanks(
+            amount=amount_text(spoken_amount.amount) if spoken_amount else None,
+            currency=spoken_amount.currency if spoken_amount else None,
+            category=expense_category_in(text),
+        )
+    if intent == "menu_allergen_question":
+        return details_without_blanks(
+            dish_number=dish_number_in(text), dish_name=dish_name_in(text), ingredient=ingredient_in(text)
+        )
+    return {}
+
+
+def model_routed_card(transcript: str, model_client: ModelClient) -> IntentCard:
+    model_evidence_source = f"{INTENT_MODEL_SOURCE} {model_client.endpoint_url}"
+    try:
+        reply = model_client.complete(
+            [ChatMessage("system", intent_label_system_prompt()), ChatMessage("user", transcript)]
+        )
+    except (ModelUnavailable, PromptTooLong) as error:
+        return unsupported_intent_card(transcript, [Evidence(source=model_evidence_source, text=str(error))])
+    intent = intent_label_from_reply(reply)
+    if intent is None:
+        return unsupported_intent_card(transcript, [Evidence(source=model_evidence_source, text=f"model reply: {reply}")])
+    routed = RoutedIntent(intent, f"model label: {intent}", model_details_for(intent, transcript), INTENT_MODEL_SOURCE)
     return intent_card(transcript, routed)
+
+
+def route_transcript(transcript: str, model_client: ModelClient | None = None) -> IntentCard:
+    routed = rule_routed_intent(transcript)
+    if routed is not None:
+        return intent_card(transcript, routed)
+    if model_client is None:
+        return unsupported_intent_card(transcript)
+    return model_routed_card(transcript, model_client)
 
 
 class TranscriptRequest(BaseModel):
@@ -372,6 +469,6 @@ intent_router = APIRouter()
 
 
 @intent_router.post("/api/transcript", response_model=StaffPhraseIntentCard | IntentCard)
-def post_transcript(request: Request, transcript_request: TranscriptRequest) -> StaffPhraseIntentCard | IntentCard:
-    routed_card = route_transcript(transcript_request.transcript)
+def post_transcript(transcript_request: TranscriptRequest, request: Request) -> StaffPhraseIntentCard | IntentCard:
+    routed_card = route_transcript(transcript_request.transcript, request.app.state.model_client)
     return answer_card_for_routed_intent(request.app.state.country_pack, routed_card)

@@ -66,7 +66,7 @@ SIX_INTENT_TITLES = [
 ]
 
 
-def test_an_unmatched_transcript_says_i_cant_do_that_yet_and_lists_the_six_intents(client):
+def test_an_unmatched_transcript_says_i_cant_do_that_yet_and_lists_the_six_intents(client, fake_model):
     card = routed_card(client, "play some music")
 
     assert card["kind"] == "unsupported_intent"
@@ -82,7 +82,7 @@ def test_fifty_sample_questions_are_committed():
 
 
 @pytest.mark.parametrize("sample", INTENT_SAMPLES, ids=[sample["transcript"] for sample in INTENT_SAMPLES])
-def test_each_sample_question_routes_to_its_intent_with_its_details(client, sample):
+def test_each_sample_question_routes_to_its_intent_with_its_details(client, fake_model, sample):
     card = routed_card(client, sample["transcript"])
 
     assert card["intent"] == sample.get("intent")
