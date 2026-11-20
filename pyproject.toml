@@ -24,6 +24,10 @@ dev = [
     "httpx>=0.27",
     "pillow>=10",
 ]
+paddleocr = [
+    "paddlepaddle>=3.3",
+    "paddleocr>=3.7",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

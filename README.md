@@ -68,6 +68,55 @@ MODELS_DIR=/path/to/models .venv/bin/python -m travel_companion.model_benchmark
 
 It starts its own llama-server on port 8091 (`--port` to change it), measures time to first token, tokens per second, load time and peak memory, then asks a fixed set of Rate questions through the fact guardrail and records how often it rejects the model's reply. It stops the server when it finishes and rewrites `docs/results/T5-mac-model-benchmark.md`. `--speed-repeats` and `--guardrail-repeats` set how many times each prompt runs.
 
+## OCR benchmark: Tesseract vs PaddleOCR
+
+Tesseract is the default engine (`[ocr] engine = "tesseract"`). PaddleOCR is an optional extra, not a core dependency:
+
+```sh
+.venv/bin/pip install -e '.[dev,paddleocr]'
+```
+
+The first PaddleOCR run downloads its models (about 130 MB) into `~/.paddlex/official_models/`, so run it once while online. After that it works offline. Set `[ocr] engine = "paddleocr"` to use it in the app. Its real-engine test is skipped unless you ask for it:
+
+```sh
+TRAVEL_COMPANION_PADDLEOCR=1 .venv/bin/pytest -q tests/test_paddleocr_engine.py
+```
+
+Run the benchmark on the specimen photos:
+
+```sh
+.venv/bin/python -m travel_companion.ocr_benchmark --include-ocr-text
+```
+
+It runs every engine in `travel_companion.ocr` (`--engines tesseract` for one) over each photo in `--photos` (default `specimens/photos/`) that has a transcription, and writes `docs/results/T3-ocr-benchmark-specimen.md` (`--results` to change it). It reports character error rate, Allergen Term recall and false positives for accent-aware and accent-insensitive matching, how many colón signs (₡) survive, and seconds per photo. An engine that is not installed is listed as not measured. To rebuild the specimen photos and their transcriptions, run `.venv/bin/python scripts/render_specimen_photos.py`.
+
+### Real photos
+
+Real photos stay in the gitignored `data/` folder, never in the repo. Put them in `data/ocr-benchmark/` and run:
+
+```sh
+.venv/bin/python -m travel_companion.ocr_benchmark --photos data/ocr-benchmark --results docs/results/T3-ocr-benchmark-real-photos.md
+```
+
+Leave out `--include-ocr-text` for real photos: without it, the results file holds only photo file names, scores and pack Allergen Terms, never the text read from a photo. Check the file before you commit it, and give photos names that say nothing private (`menu-01.jpg`, `receipt-07.jpg`).
+
+### Transcription format
+
+Each photo needs a transcription next to it with the same name and a `.txt` extension:
+
+```text
+data/ocr-benchmark/menu-01.jpg
+data/ocr-benchmark/menu-01.txt
+```
+
+- Photos: `.jpg`, `.jpeg`, `.png`, `.tif` or `.tiff`. Export iPhone HEIC photos as JPEG first. A photo without a `.txt` is listed as skipped.
+- The `.txt` is plain UTF-8 text: type the text exactly as printed, one printed line per line, top to bottom and left to right.
+- Keep accents, `ñ` and case as printed. If the menu prints `CAMARON` without an accent, type it without one. Do not fix spelling.
+- Type the colón sign as `₡` (U+20A1; on a Mac, paste it). Keep prices as printed, for example `₡4.500`.
+- Spacing does not matter: runs of spaces, tabs and line breaks all count as one space, so a dish and its price on one row can be typed `Ceviche mixto  ₡4.800`.
+- Type every line you can read, including headings, prices and footers. Leave out only text you cannot read yourself.
+- Character error rate compares the whole transcription with the whole OCR text, so a line left out of the transcription counts as an error for any engine that reads it. Allergen Term recall uses the terms in the transcription as the truth, so every shellfish word on the page must be typed.
+
 ## Known Dishes YAML
 
 Global Dishes, shared by every Country Pack, live in `packs/global/dishes.yaml`. Country dishes live in `packs/<country>/dishes.yaml`. Both files are a YAML list of dishes in this shape:
