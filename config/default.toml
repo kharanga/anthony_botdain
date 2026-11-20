@@ -18,3 +18,8 @@ endpoint_url = "http://127.0.0.1:8080/v1/chat/completions"
 brightness_backend = "recording"
 # Backlight folder for "sysfs". Empty picks the first device under /sys/class/backlight.
 backlight_dir = ""
+
+[speech]
+# whisper.cpp CLI (brew install whisper-cpp) and the English model fetched by scripts/fetch_whisper_model.sh.
+whisper_cli = "whisper-cli"
+whisper_model_path = "models/ggml-base.en.bin"
