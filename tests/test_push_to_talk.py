@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from travel_companion.app import create_app
@@ -71,6 +72,20 @@ def test_silence_returns_a_card_asking_to_hold_the_button_and_speak(config_path)
 
     assert card["kind"] == "nothing_heard"
     assert card["title"] == "I didn't catch that"
+
+
+@pytest.mark.parametrize("whisper_output", [" [ Silence ]\n", " [Music]\n", " (wind blowing)\n", " [BLANK_AUDIO] (SILENCE)\n"])
+def test_any_bracketed_non_speech_marker_alone_returns_the_nothing_heard_card(config_path, whisper_output):
+    card = spoken_card(config_path, transcriber_hearing(whisper_output))
+
+    assert card["kind"] == "nothing_heard"
+
+
+def test_a_non_speech_marker_is_dropped_from_a_spoken_question(config_path):
+    card = spoken_card(config_path, transcriber_hearing(" [Music] Show my allergy card. (laughs)"))
+
+    assert card["kind"] == "staff_phrase"
+    assert {"source": "transcript", "text": "Show my allergy card."} in card["evidence"]
 
 
 def test_a_missing_whisper_model_returns_a_card_saying_speech_to_text_is_not_available(config_path, tmp_path):

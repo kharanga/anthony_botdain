@@ -15,7 +15,7 @@ from travel_companion.model_client import ModelClient
 
 Transcriber = Callable[[bytes], str]
 
-WHISPER_BLANK_MARKERS = ("[BLANK_AUDIO]", "(silence)", "[silence]")
+WHISPER_NON_SPEECH_MARKER = re.compile(r"\[[^\]]*\]|\([^)]*\)")
 WHISPER_HASH_NUMBER = re.compile(r"#\s*(\d+)")
 
 
@@ -52,9 +52,7 @@ def last_line_or(output: str, fallback: str) -> str:
 
 
 def cleaned_transcript(raw_transcript: str) -> str:
-    transcript = " ".join(raw_transcript.split())
-    for marker in WHISPER_BLANK_MARKERS:
-        transcript = transcript.replace(marker, "")
+    transcript = " ".join(WHISPER_NON_SPEECH_MARKER.sub(" ", raw_transcript).split())
     return WHISPER_HASH_NUMBER.sub(r"number \1", transcript).strip()
 
 
