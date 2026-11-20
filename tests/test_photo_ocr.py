@@ -90,3 +90,16 @@ def test_a_photo_that_is_not_an_image_says_no_text_was_read(client):
 
     assert response.status_code == 422
     assert response.json()["kind"] == "unreadable_photo"
+
+
+def test_an_ocr_engine_that_is_not_installed_returns_a_card_naming_the_reason(client, tmp_path, monkeypatch):
+    monkeypatch.setenv("PATH", str(tmp_path / "empty-bin"))
+
+    response = client.post("/api/photo", files={"photo": (SPECIMEN_MENU.name, SPECIMEN_MENU.read_bytes(), "image/png")})
+
+    assert response.status_code == 503
+    card = response.json()
+    assert card["kind"] == "ocr_unavailable"
+    assert card["evidence"] == [
+        {"source": "OCR engine (tesseract)", "text": "the tesseract CLI is not on PATH: brew install tesseract tesseract-lang"}
+    ]

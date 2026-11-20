@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from travel_companion.cards import AnswerCard, Evidence
-from travel_companion.ocr import OcrEngine, OcrLine, UnreadablePhoto
+from travel_companion.ocr import EngineUnavailable, OcrEngine, OcrLine, UnreadablePhoto
 
 
 class ScoredOcrLine(BaseModel):
@@ -54,6 +54,15 @@ def unreadable_photo_card(engine: OcrEngine, reason: str) -> AnswerCard:
     )
 
 
+def ocr_unavailable_card(engine: OcrEngine, reason: str) -> AnswerCard:
+    return AnswerCard(
+        kind="ocr_unavailable",
+        title="Photo reading is not available",
+        body="The OCR engine isn't installed, so I can't read photos yet.",
+        evidence=[Evidence(source=f"OCR engine ({engine.name})", text=reason)],
+    )
+
+
 photo_ocr_router = APIRouter()
 
 
@@ -64,4 +73,6 @@ def post_photo(photo: UploadFile, request: Request):
         lines = engine.read_lines(photo.file.read())
     except UnreadablePhoto as unreadable:
         return JSONResponse(status_code=422, content=unreadable_photo_card(engine, str(unreadable)).model_dump())
+    except EngineUnavailable as unavailable:
+        return JSONResponse(status_code=503, content=ocr_unavailable_card(engine, str(unavailable)).model_dump())
     return ocr_lines_card(engine, lines, request.app.state.config.ocr_low_confidence_threshold)
