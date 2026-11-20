@@ -13,6 +13,7 @@ class Config:
     rate: float
     data_dir: Path
     model_endpoint_url: str
+    packs_dir: Path = Path("packs")
     brightness_backend: str = "recording"
     backlight_dir: Path | None = None
 
@@ -26,6 +27,7 @@ def load_config(config_path: Path) -> Config:
         rate=float(raw["rate"]),
         data_dir=Path(raw["data_dir"]),
         model_endpoint_url=raw["model"]["endpoint_url"],
+        packs_dir=Path(raw.get("packs_dir", "packs")),
         brightness_backend=raw.get("display", {}).get("brightness_backend", "recording"),
         backlight_dir=backlight_dir_from(raw.get("display", {})),
     )

@@ -1,0 +1,92 @@
+- line: Arroz con camarones
+  allergens: [shellfish]
+- line: ARROZ CON CAMARONES
+  allergens: [shellfish]
+- line: Camarón al ajillo
+  allergens: [shellfish]
+- line: CAMARON EMPANIZADO
+  allergens: [shellfish]
+- line: Langosta a la plancha
+  allergens: [shellfish]
+- line: Langostinos al coco
+  allergens: [shellfish]
+- line: Sopa de mariscos
+  allergens: [shellfish]
+- line: Arroz con mariscos
+  allergens: [shellfish]
+- line: Ceviche mixto
+  allergens: [shellfish]
+- line: CEVICHE MIXTO
+  allergens: [shellfish]
+- line: Paella para dos
+  allergens: [shellfish]
+- line: Pasta frutos del mar
+  allergens: [shellfish]
+- line: Cangrejo en salsa caribeña
+  allergens: [shellfish]
+- line: Jaiba rellena
+  allergens: [shellfish]
+- line: Bar El Cangrejo
+  allergens: []
+- line: Restaurante Los Camarones
+  allergens: []
+- line: Paellera de vegetales
+  allergens: []
+- line: Calamares fritos
+  allergens: []
+- line: Pulpo al ajillo
+  allergens: []
+- line: Almejas a la marinera
+  allergens: []
+- line: Mejillones al vapor
+  allergens: []
+- line: Ceviche de chucheca
+  allergens: []
+- line: Arroz con piangua
+  allergens: []
+- line: Ceviche de pescado
+  allergens: []
+- line: Casado con pescado
+  allergens: []
+- line: Gallo pinto
+  allergens: []
+- line: Olla de carne
+  allergens: []
+- line: Chifrijo
+  allergens: []
+- line: Arroz con pollo
+  allergens: []
+- line: Rice and beans
+  allergens: []
+- line: Rondón
+  allergens: []
+- line: Pollo en salsa de maní
+  allergens: [peanut]
+- line: POLLO EN SALSA DE MANI
+  allergens: [peanut]
+- line: Maní garapiñado
+  allergens: [peanut]
+- line: Cajeta de maní
+  allergens: [peanut]
+- line: Galletas con mantequilla de mani
+  allergens: [peanut]
+- line: Frito en aceite de maní
+  allergens: [peanut]
+- line: Dulce de cacahuate
+  allergens: [peanut]
+- line: Salsa de maníes tostados
+  allergens: [peanut]
+- line: Soda El Maní
+  allergens: []
+- line: Pizza Mani Rosse
+  allergens: []
+- line: Manicotti de espinaca
+  allergens: []
+- line: Manito de cerdo
+  allergens: []
+- line: Mandarina
+  allergens: []
+- line: Mañanitas de queso
+  allergens: []
+- line: Batido de mango
+  allergens: []
