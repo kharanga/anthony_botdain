@@ -67,3 +67,33 @@ MODELS_DIR=/path/to/models .venv/bin/python -m travel_companion.model_benchmark
 ```
 
 It starts its own llama-server on port 8091 (`--port` to change it), measures time to first token, tokens per second, load time and peak memory, then asks a fixed set of Rate questions through the fact guardrail and records how often it rejects the model's reply. It stops the server when it finishes and rewrites `docs/results/T5-mac-model-benchmark.md`. `--speed-repeats` and `--guardrail-repeats` set how many times each prompt runs.
+
+## Known Dishes YAML
+
+Global Dishes, shared by every Country Pack, live in `packs/global/dishes.yaml`. Country dishes live in `packs/<country>/dishes.yaml`. Both files are a YAML list of dishes in this shape:
+
+```yaml
+- name: Gallo pinto
+  aliases: [pinto]
+  ingredients:
+    rice: usual
+    black beans: usual
+    egg: sometimes
+  source: https://en.wikipedia.org/wiki/Gallo_pinto
+  reviewed: false
+```
+
+- `name` and `source` are required. `source` is where the entry came from (a Wikipedia, Wikibooks or Wikivoyage URL).
+- `aliases` is optional: other names a menu might use. Lookup ignores accents and case, so don't list accent or case variants.
+- `ingredients` maps each Ingredient (lowercase English) to `usual` (almost always in the dish) or `sometimes` (depends on the kitchen). Name crustaceans plainly: shrimp, lobster, crab, langoustine.
+- `reviewed` defaults to `false`. Agent-written dishes stay `false`; the user sets `true` after checking the entry.
+- A country dish with the same name as a Global Dish replaces it. Any other name or alias used twice stops the app at startup with a message naming both dishes and their files.
+- Peanut is a fake Allergen: it goes only in `tests/packs/`, never in `packs/`.
+
+After editing dishes, regenerate the list of dishes still to review in `docs/results/T2-unreviewed-known-dishes.md` (a test checks that it is current):
+
+```sh
+.venv/bin/python -m travel_companion.unreviewed_dishes
+```
+
+`POST /api/dish` with `{"name": "..."}` returns the dish card, or "Not in my guide. Ask staff." for a dish that isn't in the pack.

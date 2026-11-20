@@ -1,0 +1,143 @@
+- name: Fried rice
+  aliases: [arroz frito, arroz cantonés, arroz chino]
+  ingredients:
+    rice: usual
+    egg: usual
+    soy sauce: usual
+    green onion: usual
+    shrimp: sometimes
+    chicken: sometimes
+    pork: sometimes
+  source: https://en.wikipedia.org/wiki/Fried_rice
+  reviewed: false
+
+- name: Sushi
+  aliases: [sushi roll, maki, rollo de sushi]
+  ingredients:
+    sushi rice: usual
+    nori: usual
+    rice vinegar: usual
+    raw fish: sometimes
+    shrimp: sometimes
+    imitation crab: sometimes
+    avocado: sometimes
+    cucumber: sometimes
+  source: https://en.wikipedia.org/wiki/Sushi
+  reviewed: false
+
+- name: Fajitas
+  aliases: [fajita]
+  ingredients:
+    flour tortilla: usual
+    bell pepper: usual
+    onion: usual
+    beef: sometimes
+    chicken: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Fajita
+  reviewed: false
+
+- name: Tacos
+  aliases: [taco]
+  ingredients:
+    corn tortilla: usual
+    onion: usual
+    cilantro: usual
+    beef: sometimes
+    pork: sometimes
+    chicken: sometimes
+    fish: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Taco
+  reviewed: false
+
+- name: Spring rolls
+  aliases: [spring roll, rollitos primavera, rollito primavera, egg roll, egg rolls]
+  ingredients:
+    wheat wrapper: usual
+    cabbage: usual
+    carrot: usual
+    shrimp: sometimes
+    pork: sometimes
+  source: https://en.wikipedia.org/wiki/Spring_roll
+  reviewed: false
+
+- name: Fettuccine Alfredo
+  aliases: [fetuccini alfredo, fettuccini alfredo, pasta alfredo]
+  ingredients:
+    fettuccine: usual
+    butter: usual
+    parmesan cheese: usual
+    cream: sometimes
+    chicken: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Fettuccine_Alfredo
+  reviewed: false
+
+- name: Caesar salad
+  aliases: [ensalada césar, ensalada cesar]
+  ingredients:
+    romaine lettuce: usual
+    croutons: usual
+    parmesan cheese: usual
+    caesar dressing: usual
+    anchovy: sometimes
+    chicken: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Caesar_salad
+  reviewed: false
+
+- name: Ceviche
+  aliases: [cebiche]
+  ingredients:
+    raw fish: usual
+    lime juice: usual
+    onion: usual
+    chili pepper: usual
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Ceviche
+  reviewed: false
+
+- name: Pizza
+  aliases: [pizza margarita, pizza margherita]
+  ingredients:
+    wheat dough: usual
+    tomato sauce: usual
+    mozzarella cheese: usual
+    ham: sometimes
+    pepperoni: sometimes
+  source: https://en.wikipedia.org/wiki/Pizza
+  reviewed: false
+
+- name: Hamburger
+  aliases: [hamburguesa, burger]
+  ingredients:
+    bun: usual
+    beef patty: usual
+    cheese: sometimes
+    lettuce: sometimes
+    tomato: sometimes
+    onion: sometimes
+    pickles: sometimes
+  source: https://en.wikipedia.org/wiki/Hamburger
+  reviewed: false
+
+- name: Club sandwich
+  aliases: [sándwich club, sandwich club, emparedado club]
+  ingredients:
+    bread: usual
+    chicken or turkey: usual
+    bacon: usual
+    lettuce: usual
+    tomato: usual
+    mayonnaise: usual
+  source: https://en.wikipedia.org/wiki/Club_sandwich
+  reviewed: false
+
+- name: Fish and chips
+  aliases: [pescado con papas, fish & chips]
+  ingredients:
+    battered fish: usual
+    fried potatoes: usual
+  source: https://en.wikipedia.org/wiki/Fish_and_chips
+  reviewed: false

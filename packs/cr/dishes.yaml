@@ -1,0 +1,151 @@
+- name: Gallo pinto
+  aliases: [pinto]
+  ingredients:
+    rice: usual
+    black beans: usual
+    onion: usual
+    sweet pepper: usual
+    cilantro: usual
+    salsa Lizano: usual
+    egg: sometimes
+    sour cream: sometimes
+  source: https://en.wikipedia.org/wiki/Gallo_pinto
+  reviewed: false
+
+- name: Casado
+  aliases: [plato casado]
+  ingredients:
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    chicken: sometimes
+    beef: sometimes
+    pork: sometimes
+    fish: sometimes
+    egg: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Casado_(food)
+  reviewed: false
+
+- name: Olla de carne
+  aliases: [sopa de carne]
+  ingredients:
+    beef: usual
+    yuca: usual
+    chayote: usual
+    corn on the cob: usual
+    potato: usual
+    carrot: usual
+    green plantain: usual
+    taro: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Chifrijo
+  ingredients:
+    rice: usual
+    red beans: usual
+    chicharrón: usual
+    pico de gallo: usual
+    tortilla chips: usual
+    avocado: sometimes
+  source: https://en.wikipedia.org/wiki/Chifrijo
+  reviewed: false
+
+- name: Rice and beans
+  aliases: [rice an beans, rice & beans, rice n beans]
+  ingredients:
+    rice: usual
+    red beans: usual
+    coconut milk: usual
+    thyme: usual
+    Panamanian chili pepper: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Rondón
+  aliases: [rundown, run down]
+  ingredients:
+    fish: usual
+    coconut milk: usual
+    yuca: usual
+    green plantain: usual
+    crab: sometimes
+    lobster: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Ceviche
+  aliases: [ceviche de pescado, ceviche tico, cebiche]
+  ingredients:
+    raw fish: usual
+    lime juice: usual
+    onion: usual
+    cilantro: usual
+    sweet pepper: usual
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Ceviche
+  reviewed: false
+
+- name: Arroz con mariscos
+  aliases: [arroz marinero]
+  ingredients:
+    rice: usual
+    shrimp: usual
+    squid: usual
+    clams: sometimes
+    mussels: sometimes
+    octopus: sometimes
+    crab: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Arroz con pollo
+  ingredients:
+    rice: usual
+    chicken: usual
+    carrot: usual
+    sweet pepper: usual
+    onion: usual
+    peas: sometimes
+    corn: sometimes
+  source: https://en.wikipedia.org/wiki/Arroz_con_pollo
+  reviewed: false
+
+- name: Patacones
+  aliases: [patacón, tostones]
+  ingredients:
+    green plantain: usual
+    frying oil: usual
+    salt: usual
+    black bean dip: sometimes
+    guacamole: sometimes
+  source: https://en.wikipedia.org/wiki/Tostones
+  reviewed: false
+
+- name: Sopa negra
+  aliases: [sopa de frijoles negros, sopa de frijoles]
+  ingredients:
+    black beans: usual
+    onion: usual
+    garlic: usual
+    cilantro: usual
+    hard-boiled egg: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Tamal
+  aliases: [tamales, tamal de cerdo, tamal tico]
+  ingredients:
+    corn masa: usual
+    pork: usual
+    rice: usual
+    banana leaf wrapping: usual
+    chicken: sometimes
+    olives: sometimes
+    carrot: sometimes
+    sweet pepper: sometimes
+  source: https://en.wikipedia.org/wiki/Tamale
+  reviewed: false
