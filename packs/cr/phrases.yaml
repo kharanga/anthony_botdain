@@ -1,0 +1,12 @@
+allergy:
+  english: "I am allergic to shellfish: shrimp, lobster, crab. Mollusks are OK."
+  spanish: "Tengo alergia a los crustáceos: camarón, langosta y cangrejo. Los moluscos sí los puedo comer."
+  verification: Machine-checked
+dish_question:
+  english: "Does this dish contain shrimp, lobster, crab, or seafood broth?"
+  spanish: "¿Este plato contiene camarón, langosta, cangrejo o caldo de mariscos?"
+  verification: Machine-checked
+hospital_pharmacy:
+  english: "Where is the nearest hospital / pharmacy?"
+  spanish: "¿Dónde queda el hospital más cercano o la farmacia más cercana?"
+  verification: Machine-checked
