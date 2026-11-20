@@ -58,8 +58,25 @@ def digits_value(digits: str, currency: str | None) -> Decimal:
     return Decimal(digits.replace(",", "."))
 
 
-def is_amount_start(token: str) -> bool:
-    return token in CURRENCY_SYMBOLS or token[0].isdigit() or token in UNIT_WORD_VALUES
+IMPLIED_ONE_ARTICLE = "a"
+
+
+def starts_with_implied_one(tokens: list[str], position: int) -> bool:
+    return (
+        tokens[position] == IMPLIED_ONE_ARTICLE
+        and position + 1 < len(tokens)
+        and tokens[position + 1] in PLAIN_MULTIPLIER_WORDS
+    )
+
+
+def is_amount_start(tokens: list[str], position: int) -> bool:
+    token = tokens[position]
+    return (
+        token in CURRENCY_SYMBOLS
+        or token[0].isdigit()
+        or token in NUMBER_RUN_WORDS
+        or starts_with_implied_one(tokens, position)
+    )
 
 
 def number_word_run_length(tokens: list[str], start: int) -> int:
@@ -70,7 +87,7 @@ def number_word_run_length(tokens: list[str], start: int) -> int:
 
 
 def amount_from(tokens: list[str], start: int) -> AmountCandidate | None:
-    position = start
+    position = start + 1 if starts_with_implied_one(tokens, start) else start
     currency = None
     if tokens[position] in CURRENCY_SYMBOLS:
         currency = CURRENCY_SYMBOLS[tokens[position]]
@@ -111,7 +128,7 @@ def amount_candidates_in(tokens: list[str]) -> list[AmountCandidate]:
     candidates = []
     position = 0
     while position < len(tokens):
-        candidate = amount_from(tokens, position) if is_amount_start(tokens[position]) else None
+        candidate = amount_from(tokens, position) if is_amount_start(tokens, position) else None
         if candidate is None:
             position += 1
         else:

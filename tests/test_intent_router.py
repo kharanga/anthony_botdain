@@ -116,3 +116,17 @@ def test_a_count_before_the_item_is_not_taken_as_the_expense_amount(client):
     card = routed_card(client, "add one coffee for 2000 colones")
 
     assert card["details"] == {"amount": "2000", "currency": "CRC", "category": "food"}
+
+
+@pytest.mark.parametrize(
+    "transcript, amount",
+    [
+        ("I spent a hundred dollars on the hotel", "100"),
+        ("I spent a thousand dollars on the hotel", "1000"),
+        ("I spent hundred dollars on the hotel", "100"),
+    ],
+)
+def test_a_hundred_or_a_thousand_is_read_as_one_hundred_or_one_thousand(client, transcript, amount):
+    card = routed_card(client, transcript)
+
+    assert card["details"] == {"amount": amount, "currency": "USD", "category": "lodging"}
