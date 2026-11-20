@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, TypeVar
+from typing import Annotated, Literal, TypeVar
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import yaml
@@ -10,6 +10,7 @@ from travel_companion.cards import Evidence
 
 PACK_MANIFEST_FILE = "pack.yaml"
 ALLERGEN_TERMS_FILE = "allergen_terms.yaml"
+PHRASES_FILE = "phrases.yaml"
 
 NonEmptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 CurrencyCode = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
@@ -49,6 +50,25 @@ class AllergenTermsFile(RootModel[dict[NonEmptyText, Annotated[list[NonEmptyText
     pass
 
 
+class PhraseEntry(StrictPackModel):
+    english: NonEmptyText
+    spanish: NonEmptyText
+    verification: Literal["Machine-checked"]
+
+
+class PhrasesFile(RootModel[Annotated[dict[NonEmptyText, PhraseEntry], Field(min_length=1)]]):
+    pass
+
+
+@dataclass(frozen=True)
+class Phrase:
+    name: str
+    english: str
+    spanish: str
+    verification: str
+    source: Path
+
+
 @dataclass(frozen=True)
 class AllergenTerm:
     allergen: str
@@ -61,6 +81,7 @@ class CountryPack:
     folder: Path
     manifest: PackManifest
     allergen_terms: tuple[AllergenTerm, ...]
+    phrases: tuple[Phrase, ...]
 
     def terms_for(self, allergen: str) -> tuple[AllergenTerm, ...]:
         return tuple(term for term in self.allergen_terms if term.allergen == allergen)
@@ -117,6 +138,14 @@ def loaded_allergen_terms(pack_folder: Path, required_allergens: tuple[str, ...]
     )
 
 
+def loaded_phrases(pack_folder: Path) -> tuple[Phrase, ...]:
+    phrases_path = pack_folder / PHRASES_FILE
+    return tuple(
+        Phrase(name=name, source=phrases_path, **entry.model_dump())
+        for name, entry in validated_pack_file(phrases_path, PhrasesFile).root.items()
+    )
+
+
 def load_country_pack(packs_dir: Path, country: str, required_allergens: tuple[str, ...]) -> CountryPack:
     pack_folder = Path(packs_dir) / country
     if not pack_folder.is_dir():
@@ -125,6 +154,7 @@ def load_country_pack(packs_dir: Path, country: str, required_allergens: tuple[s
         folder=pack_folder,
         manifest=loaded_manifest(pack_folder, country),
         allergen_terms=loaded_allergen_terms(pack_folder, required_allergens),
+        phrases=loaded_phrases(pack_folder),
     )
 
 
