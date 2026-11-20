@@ -12,6 +12,7 @@ dependencies = [
     "duckdb>=1.1",
     "cryptography>=43",
     "pyyaml>=6",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
@@ -21,6 +22,7 @@ travel-companion = "travel_companion.__main__:serve"
 dev = [
     "pytest>=8",
     "httpx>=0.27",
+    "pillow>=10",
 ]
 
 [tool.setuptools.packages.find]
