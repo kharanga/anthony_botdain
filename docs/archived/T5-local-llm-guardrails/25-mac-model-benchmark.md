@@ -1,7 +1,7 @@
 # #25: Mac model benchmark
 
 **Parent:** #5  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/25
 

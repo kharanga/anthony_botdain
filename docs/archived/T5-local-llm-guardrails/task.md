@@ -1,7 +1,7 @@
 # #5: T5: Local LLM + guardrails
 
 **Parent:** #1  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/5
 

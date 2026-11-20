@@ -1,7 +1,7 @@
 # #21: Edit the Rate on the device
 
 **Parent:** #2  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/21
 

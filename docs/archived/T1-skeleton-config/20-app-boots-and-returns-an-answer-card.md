@@ -1,7 +1,7 @@
 # #20: App boots and returns an answer card
 
 **Parent:** #2  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/20
 

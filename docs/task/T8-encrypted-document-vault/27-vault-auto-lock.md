@@ -1,7 +1,7 @@
 # #27: Vault auto-lock
 
 **Parent:** #10  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/27
 

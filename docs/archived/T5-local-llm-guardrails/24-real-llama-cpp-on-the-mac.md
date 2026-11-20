@@ -1,7 +1,7 @@
 # #24: Real llama.cpp on the Mac
 
 **Parent:** #5  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/24
 

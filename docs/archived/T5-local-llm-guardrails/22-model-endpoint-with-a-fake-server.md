@@ -1,7 +1,7 @@
 # #22: Model endpoint with a fake server
 
 **Parent:** #5  
-**Status:** open  
+**Status:** closed  
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/22
 

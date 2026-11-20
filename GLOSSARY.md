@@ -43,7 +43,7 @@ A word in the country's language that means a dish probably contains an Allergen
 _Avoid_: keyword
 
 **Known Dish**:
-A dish in the Country Pack, with its aliases and its Ingredients, each entry taken from a recorded source.
+A dish the scanner can recognise, with its aliases and its Ingredients, each entry taken from a recorded source. A Known Dish is either a **Global Dish**, shared by every Country Pack, or a country dish from one Country Pack; a country dish with the same name replaces the Global Dish. A Known Dish is **unreviewed** until the user has checked it; unreviewed dishes still get Allergy Labels, and their cards say they are unreviewed.
 _Avoid_: recipe, menu item
 
 **Ingredient**:
