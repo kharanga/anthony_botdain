@@ -18,3 +18,10 @@ endpoint_url = "http://127.0.0.1:8080/v1/chat/completions"
 brightness_backend = "recording"
 # Backlight folder for "sysfs". Empty picks the first device under /sys/class/backlight.
 backlight_dir = ""
+
+[ocr]
+# Engine name; "tesseract" uses the tesseract CLI with the language below.
+engine = "tesseract"
+language = "spa"
+# Lines whose lowest word confidence (0-100) is under this are flagged so they get Ask staff.
+low_confidence_threshold = 70.0

@@ -4,6 +4,12 @@ An offline travel companion. The plan is in `SPEC.md`; project terms are in `GLO
 
 ## Run on the Mac with fake data
 
+Photo OCR needs Tesseract with Spanish data, and the tests run it for real:
+
+```sh
+brew install tesseract tesseract-lang
+```
+
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
