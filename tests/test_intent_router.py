@@ -141,6 +141,17 @@ def test_a_seafood_question_about_a_place_is_a_guide_question_not_a_menu_questio
     assert card["details"] == {"question": transcript}
 
 
+@pytest.mark.parametrize(
+    "transcript",
+    ["does this dish have shrimp", "does that plate have shrimp", "is there shrimp in the item", "does the dish have shrimp"],
+)
+def test_a_pronoun_and_dish_noun_means_the_current_menu_item_not_a_dish_name(client, transcript):
+    card = routed_card(client, transcript)
+
+    assert card["intent"] == "menu_allergen_question"
+    assert card["details"] == {"ingredient": "shrimp"}
+
+
 @pytest.mark.parametrize("transcript", ["does it have shrimp", "is there shrimp in this", "does this have shrimp"])
 def test_it_or_this_next_to_an_allergen_question_still_means_the_menu(client, transcript):
     card = routed_card(client, transcript)
