@@ -204,8 +204,10 @@ def raise_on_shared_dish_names(dishes: tuple[KnownDish, ...]) -> None:
 
 
 def merged_known_dishes(global_dishes: tuple[KnownDish, ...], country_dishes: tuple[KnownDish, ...]) -> tuple[KnownDish, ...]:
-    country_dish_names = {accent_and_case_folded(dish.name) for dish in country_dishes}
-    kept_global_dishes = tuple(dish for dish in global_dishes if accent_and_case_folded(dish.name) not in country_dish_names)
+    country_dish_names_and_aliases = {folded_name for dish in country_dishes for folded_name in dish.folded_names}
+    kept_global_dishes = tuple(
+        dish for dish in global_dishes if country_dish_names_and_aliases.isdisjoint(dish.folded_names)
+    )
     merged_dishes = kept_global_dishes + country_dishes
     raise_on_shared_dish_names(merged_dishes)
     return merged_dishes

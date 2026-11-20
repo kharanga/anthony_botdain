@@ -217,7 +217,13 @@ NAMED_DISH_PATTERNS = (
     r"\b(?:does|do|did) (?:the )?(?P<name>.+?) (?:have|contain|come with)\b",
     r"\b(?:is|are) there (?:any )?\w+ in (?:the )?(?P<name>.+?)[?.!]?$",
 )
-WHOLE_MENU_PATTERN = r"\b(?:this menu|the menu|which (?:dishes|ones|items)|this|it)\b"
+CURRENT_MENU_ITEM_PATTERN = r"(?:(?:this|that|the) )?(?:dish|plate|item|meal|one)"
+CURRENT_MENU_ITEM_REFERENCE = rf"(?:it|this|that|{CURRENT_MENU_ITEM_PATTERN})"
+WHOLE_MENU_PATTERNS = (
+    r"\b(?:this menu|the menu|which (?:dishes|ones|items))\b",
+    rf"\b(?:does|do|did) {CURRENT_MENU_ITEM_REFERENCE} (?:have|contain|come with)\b",
+    rf"\bin {CURRENT_MENU_ITEM_REFERENCE}[?.!]?$",
+)
 NOT_A_DISH_NAME = frozenset({"this", "it", "that", "they", "these", "those", "i", "you", "this one", "that one"})
 
 
@@ -240,10 +246,14 @@ def dish_number_in(text: str) -> str | None:
     return None
 
 
+def names_no_dish(name: str) -> bool:
+    return name in NOT_A_DISH_NAME or re.fullmatch(CURRENT_MENU_ITEM_PATTERN, name) is not None
+
+
 def dish_name_in(text: str) -> str | None:
     for named_dish_pattern in NAMED_DISH_PATTERNS:
         matched = re.search(named_dish_pattern, text)
-        if matched and matched.group("name") not in NOT_A_DISH_NAME:
+        if matched and not names_no_dish(matched.group("name")):
             return matched.group("name")
     return None
 
@@ -261,7 +271,7 @@ def named_or_whole_menu_question(text: str, ingredient: str | None) -> RoutedInt
     if ingredient is None:
         return None
     dish_name = dish_name_in(text)
-    if dish_name is None and re.search(WHOLE_MENU_PATTERN, text) is None:
+    if dish_name is None and contains_any(text, WHOLE_MENU_PATTERNS) is None:
         return None
     details = details_without_blanks(dish_name=dish_name, ingredient=ingredient)
     return RoutedIntent("menu_allergen_question", f"menu question about {ingredient}", details)

@@ -104,3 +104,57 @@ def test_an_intent_card_names_the_intent_and_spells_out_its_details(client):
     assert card["title"] == "Add an expense"
     assert "5000" in card["body"]
     assert "transport" in card["body"]
+
+
+def test_number_words_after_a_digit_and_thousand_are_added_to_the_expense_amount(client):
+    card = routed_card(client, "I spent 3 thousand five hundred colones on lunch")
+
+    assert card["details"] == {"amount": "3500", "currency": "CRC", "category": "food"}
+
+
+def test_a_count_before_the_item_is_not_taken_as_the_expense_amount(client):
+    card = routed_card(client, "add one coffee for 2000 colones")
+
+    assert card["details"] == {"amount": "2000", "currency": "CRC", "category": "food"}
+
+
+@pytest.mark.parametrize(
+    "transcript, amount",
+    [
+        ("I spent a hundred dollars on the hotel", "100"),
+        ("I spent a thousand dollars on the hotel", "1000"),
+        ("I spent hundred dollars on the hotel", "100"),
+    ],
+)
+def test_a_hundred_or_a_thousand_is_read_as_one_hundred_or_one_thousand(client, transcript, amount):
+    card = routed_card(client, transcript)
+
+    assert card["details"] == {"amount": amount, "currency": "USD", "category": "lodging"}
+
+
+def test_a_seafood_question_about_a_place_is_a_guide_question_not_a_menu_question(client):
+    transcript = "Is it safe to eat seafood in Puntarenas?"
+
+    card = routed_card(client, transcript)
+
+    assert card["intent"] == "guide_question"
+    assert card["details"] == {"question": transcript}
+
+
+@pytest.mark.parametrize(
+    "transcript",
+    ["does this dish have shrimp", "does that plate have shrimp", "is there shrimp in the item", "does the dish have shrimp"],
+)
+def test_a_pronoun_and_dish_noun_means_the_current_menu_item_not_a_dish_name(client, transcript):
+    card = routed_card(client, transcript)
+
+    assert card["intent"] == "menu_allergen_question"
+    assert card["details"] == {"ingredient": "shrimp"}
+
+
+@pytest.mark.parametrize("transcript", ["does it have shrimp", "is there shrimp in this", "does this have shrimp"])
+def test_it_or_this_next_to_an_allergen_question_still_means_the_menu(client, transcript):
+    card = routed_card(client, transcript)
+
+    assert card["intent"] == "menu_allergen_question"
+    assert card["details"] == {"ingredient": "shrimp"}
