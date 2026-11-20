@@ -217,7 +217,11 @@ NAMED_DISH_PATTERNS = (
     r"\b(?:does|do|did) (?:the )?(?P<name>.+?) (?:have|contain|come with)\b",
     r"\b(?:is|are) there (?:any )?\w+ in (?:the )?(?P<name>.+?)[?.!]?$",
 )
-WHOLE_MENU_PATTERN = r"\b(?:this menu|the menu|which (?:dishes|ones|items)|this|it)\b"
+WHOLE_MENU_PATTERNS = (
+    r"\b(?:this menu|the menu|which (?:dishes|ones|items))\b",
+    r"\b(?:does|do|did) (?:it|this|that) (?:have|contain|come with)\b",
+    r"\bin (?:it|this|that)(?: one)?[?.!]?$",
+)
 NOT_A_DISH_NAME = frozenset({"this", "it", "that", "they", "these", "those", "i", "you", "this one", "that one"})
 
 
@@ -261,7 +265,7 @@ def named_or_whole_menu_question(text: str, ingredient: str | None) -> RoutedInt
     if ingredient is None:
         return None
     dish_name = dish_name_in(text)
-    if dish_name is None and re.search(WHOLE_MENU_PATTERN, text) is None:
+    if dish_name is None and contains_any(text, WHOLE_MENU_PATTERNS) is None:
         return None
     details = details_without_blanks(dish_name=dish_name, ingredient=ingredient)
     return RoutedIntent("menu_allergen_question", f"menu question about {ingredient}", details)

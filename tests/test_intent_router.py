@@ -130,3 +130,20 @@ def test_a_hundred_or_a_thousand_is_read_as_one_hundred_or_one_thousand(client, 
     card = routed_card(client, transcript)
 
     assert card["details"] == {"amount": amount, "currency": "USD", "category": "lodging"}
+
+
+def test_a_seafood_question_about_a_place_is_a_guide_question_not_a_menu_question(client):
+    transcript = "Is it safe to eat seafood in Puntarenas?"
+
+    card = routed_card(client, transcript)
+
+    assert card["intent"] == "guide_question"
+    assert card["details"] == {"question": transcript}
+
+
+@pytest.mark.parametrize("transcript", ["does it have shrimp", "is there shrimp in this", "does this have shrimp"])
+def test_it_or_this_next_to_an_allergen_question_still_means_the_menu(client, transcript):
+    card = routed_card(client, transcript)
+
+    assert card["intent"] == "menu_allergen_question"
+    assert card["details"] == {"ingredient": "shrimp"}
