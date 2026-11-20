@@ -119,17 +119,41 @@ def test_an_invalid_dish_stops_the_app_with_a_message_naming_the_problem(tmp_pat
     assert named_problem in str(stopped_startup.value)
 
 
-def test_an_alias_clash_between_a_global_and_a_country_dish_names_both_files(tmp_path):
+CR_RICE_DISH_YAML = """
+- name: {name}
+  aliases: [{aliases}]
+  ingredients:
+    rice: usual
+    shrimp: sometimes
+  source: https://example.org/specimen-cr-rice
+  reviewed: false
+"""
+
+
+def packs_with_extra_cr_dish(tmp_path, name, aliases):
     packs_dir = copied_packs_dir(tmp_path)
     dishes_path = packs_dir / "cr" / "dishes.yaml"
-    dishes_path.write_text(dishes_path.read_text().replace("aliases: [pinto, gallopinto]", "aliases: [pinto, gallopinto, arroz frito]"))
+    dishes_path.write_text(dishes_path.read_text() + CR_RICE_DISH_YAML.format(name=name, aliases=aliases))
+    return packs_dir
 
-    with pytest.raises(InvalidCountryPack) as stopped_startup:
-        client_for_packs(tmp_path, packs_dir)
 
-    assert "'arroz frito'" in str(stopped_startup.value)
-    assert "global/dishes.yaml" in str(stopped_startup.value)
-    assert "cr/dishes.yaml" in str(stopped_startup.value)
+@pytest.mark.parametrize(
+    "name, aliases, looked_up_name",
+    [
+        ("Arroz frito tico", "fried rice", "fried rice"),
+        ("Arroz chino", "arroz chino tico", "arroz chino"),
+        ("Arroz frito tico", "arroz frito", "arroz cantonés"),
+    ],
+    ids=["country alias is a global name", "country name is a global alias", "country alias is a global alias"],
+)
+def test_a_country_dish_replaces_a_global_dish_sharing_any_name_or_alias(tmp_path, name, aliases, looked_up_name):
+    with client_for_packs(tmp_path, packs_with_extra_cr_dish(tmp_path, name, aliases)) as client:
+        replaced_card = client.post("/api/dish", json={"name": looked_up_name}).json()
+        country_card = looked_up_card(client, name)
+
+    assert country_card["title"] == name
+    assert all(evidence["source"].endswith("packs/cr/dishes.yaml") for evidence in country_card["evidence"])
+    assert not any(evidence["source"].endswith("packs/global/dishes.yaml") for evidence in replaced_card["evidence"])
 
 
 def test_a_missing_global_dishes_file_stops_the_app_naming_the_file(tmp_path):
