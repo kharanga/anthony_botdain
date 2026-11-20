@@ -97,3 +97,40 @@ After editing dishes, regenerate the list of dishes still to review in `docs/res
 ```
 
 `POST /api/dish` with `{"name": "..."}` returns the dish card, or "Not in my guide. Ask staff." for a dish that isn't in the pack.
+
+## Push-to-talk speech-to-text (whisper.cpp)
+
+Hold **Hold to talk** on the home screen, ask in English, then let go. The browser records the mic as 16 kHz mono WAV and posts it to `POST /api/speech`. The app runs whisper.cpp's `whisper-cli` on the CPU (`-l en -ng`), so nothing leaves the machine, then sends the transcript through the same intent router as `POST /api/transcript` and shows the card it returns.
+
+1. Install whisper.cpp:
+
+   ```sh
+   brew install whisper-cpp
+   ```
+
+2. Download the English base model (about 148 MB) into the gitignored `models/` folder. The script checks its SHA-256 and does nothing if the file is already there; `MODELS_DIR` works as for the llama.cpp model:
+
+   ```sh
+   scripts/fetch_whisper_model.sh
+   ```
+
+3. Start the app (`.venv/bin/travel-companion`) and open http://127.0.0.1:8765. The browser asks for mic access the first time. `[speech]` in `config/default.toml` sets `whisper_cli` and `whisper_model_path`; if either is missing the card says speech-to-text is not available.
+
+To send a recording by hand:
+
+```sh
+say -o question.wav --file-format=WAVE --data-format=LEI16@16000 "show my allergy card"
+curl -s http://127.0.0.1:8765/api/speech -H 'Content-Type: audio/wav' --data-binary @question.wav
+```
+
+The normal tests send text transcripts and a stand-in transcriber. The real-whisper test is skipped unless you point it at the model:
+
+```sh
+TRAVEL_COMPANION_REAL_WHISPER_MODEL=models/ggml-base.en.bin .venv/bin/pytest -q tests/test_real_whisper.py
+```
+
+The benchmark speaks sample questions with macOS `say` at run time, transcribes them and rewrites `docs/results/T6-speech-to-text.md`:
+
+```sh
+.venv/bin/python -m travel_companion.speech_benchmark --model models/ggml-base.en.bin
+```

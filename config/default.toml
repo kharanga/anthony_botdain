@@ -19,6 +19,11 @@ brightness_backend = "recording"
 # Backlight folder for "sysfs". Empty picks the first device under /sys/class/backlight.
 backlight_dir = ""
 
+[speech]
+# whisper.cpp CLI (brew install whisper-cpp) and the English model fetched by scripts/fetch_whisper_model.sh.
+whisper_cli = "whisper-cli"
+whisper_model_path = "models/ggml-base.en.bin"
+
 [ocr]
 # Engine name; "tesseract" uses the tesseract CLI with the language below.
 engine = "tesseract"
