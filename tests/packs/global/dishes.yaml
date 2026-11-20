@@ -1,0 +1,8 @@
+- name: Fried rice
+  aliases: [arroz frito]
+  ingredients:
+    rice: usual
+    egg: usual
+    shrimp: sometimes
+  source: specimen
+  reviewed: true

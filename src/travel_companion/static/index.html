@@ -16,6 +16,12 @@
   #rate-form { margin-top: 16px; display: flex; gap: 8px; align-items: center; font-size: 1.2rem; }
   #rate-form input { font-size: 1.2rem; width: 8em; padding: 8px; }
   #rate-form button { font-size: 1.2rem; padding: 8px 16px; }
+  #push-to-talk { margin-top: 16px; width: 100%; min-height: 96px; font-size: 1.6rem; border: 0; border-radius: 12px; background: #2a5; color: #fff; touch-action: none; user-select: none; -webkit-user-select: none; }
+  #push-to-talk.recording { background: #c33; }
+  #push-to-talk:disabled { background: #555; }
+  #transcript-form { margin-bottom: 16px; display: flex; gap: 8px; }
+  #transcript-form input { flex: 1; font-size: 1.2rem; padding: 8px; }
+  #transcript-form button { font-size: 1.2rem; padding: 8px 16px; }
   #staff-phrase-button { display: block; width: 100%; margin-bottom: 16px; padding: 24px; font-size: 1.8rem; border: 0; border-radius: 12px; background: #2a5d9f; color: #fff; }
   #staff-phrase-view { position: fixed; inset: 0; overflow-y: auto; background: #fff; color: #000; padding: 24px; box-sizing: border-box; }
   #staff-phrase-view[hidden] { display: none; }
@@ -30,7 +36,12 @@
 <body>
 <main>
   <button id="staff-phrase-button" type="button">Allergy card</button>
+  <form id="transcript-form">
+    <input id="transcript-input" name="transcript" type="text" placeholder="Ask, e.g. show my allergy card" required>
+    <button type="submit">Ask</button>
+  </form>
   <section id="card" class="card"><p>Loading…</p></section>
+  <button id="push-to-talk" type="button">Hold to talk</button>
   <form id="rate-form">
     <label for="rate-input">Rate (₡ per US dollar)</label>
     <input id="rate-input" name="colones_per_dollar" type="number" inputmode="decimal" min="0" step="any" required>
@@ -98,6 +109,108 @@
     }));
   }
 
+  const WHISPER_SAMPLE_RATE = 16000;
+  const pushToTalkButton = document.getElementById("push-to-talk");
+  let activeRecording = null;
+
+  function mergedSamples(chunks) {
+    const length = chunks.reduce((total, chunk) => total + chunk.length, 0);
+    const samples = new Float32Array(length);
+    let offset = 0;
+    for (const chunk of chunks) {
+      samples.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return samples;
+  }
+
+  function wavBlobFrom(samples, sampleRate) {
+    const bytesPerSample = 2;
+    const view = new DataView(new ArrayBuffer(44 + samples.length * bytesPerSample));
+    const writeText = (offset, text) => [...text].forEach((letter, index) => view.setUint8(offset + index, letter.charCodeAt(0)));
+    writeText(0, "RIFF");
+    view.setUint32(4, 36 + samples.length * bytesPerSample, true);
+    writeText(8, "WAVE");
+    writeText(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * bytesPerSample, true);
+    view.setUint16(32, bytesPerSample, true);
+    view.setUint16(34, 16, true);
+    writeText(36, "data");
+    view.setUint32(40, samples.length * bytesPerSample, true);
+    samples.forEach((sample, index) => {
+      const clamped = Math.max(-1, Math.min(1, sample));
+      view.setInt16(44 + index * bytesPerSample, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
+    });
+    return new Blob([view], { type: "audio/wav" });
+  }
+
+  async function startRecording(event) {
+    event.preventDefault();
+    if (activeRecording) return;
+    pushToTalkButton.setPointerCapture(event.pointerId);
+    activeRecording = { chunks: [] };
+    pushToTalkButton.classList.add("recording");
+    pushToTalkButton.textContent = "Listening… let go to ask";
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1 } });
+      const audioContext = new AudioContext({ sampleRate: WHISPER_SAMPLE_RATE });
+      const source = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      processor.onaudioprocess = (audioEvent) => activeRecording && activeRecording.chunks.push(new Float32Array(audioEvent.inputBuffer.getChannelData(0)));
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+      Object.assign(activeRecording, { stream, audioContext, processor });
+      if (activeRecording.releasedEarly) stopRecording();
+    } catch (error) {
+      activeRecording = null;
+      resetPushToTalkButton();
+      document.getElementById("card").textContent = "The microphone is not available: " + error;
+    }
+  }
+
+  function resetPushToTalkButton() {
+    pushToTalkButton.classList.remove("recording");
+    pushToTalkButton.disabled = false;
+    pushToTalkButton.textContent = "Hold to talk";
+  }
+
+  async function stopRecording() {
+    const recording = activeRecording;
+    if (!recording) return;
+    if (!recording.audioContext) {
+      recording.releasedEarly = true;
+      return;
+    }
+    activeRecording = null;
+    recording.processor.disconnect();
+    recording.stream.getTracks().forEach((track) => track.stop());
+    await recording.audioContext.close();
+    pushToTalkButton.classList.remove("recording");
+    pushToTalkButton.disabled = true;
+    pushToTalkButton.textContent = "Thinking…";
+    const container = document.getElementById("card");
+    try {
+      const response = await fetch("/api/speech", {
+        method: "POST",
+        headers: { "Content-Type": "audio/wav" },
+        body: wavBlobFrom(mergedSamples(recording.chunks), recording.audioContext.sampleRate),
+      });
+      showRoutedCard(await response.json());
+    } catch (error) {
+      container.textContent = "The app is not responding: " + error;
+    }
+    resetPushToTalkButton();
+  }
+
+  pushToTalkButton.addEventListener("pointerdown", startRecording);
+  pushToTalkButton.addEventListener("pointerup", stopRecording);
+  pushToTalkButton.addEventListener("pointercancel", stopRecording);
+  pushToTalkButton.addEventListener("contextmenu", (event) => event.preventDefault());
+
   function renderStaffPhraseCard(card) {
     const list = document.getElementById("staff-phrase-list");
     list.replaceChildren();
@@ -111,13 +224,39 @@
     });
   }
 
+  function openStaffPhraseView(card) {
+    renderStaffPhraseCard(card);
+    document.getElementById("staff-phrase-view").hidden = false;
+  }
+
   async function showStaffPhraseCard(phraseName) {
-    const view = document.getElementById("staff-phrase-view");
     const query = phraseName ? "?phrase=" + encodeURIComponent(phraseName) : "";
     try {
       const response = await fetch("/api/staff-phrase" + query);
-      renderStaffPhraseCard(await response.json());
-      view.hidden = false;
+      openStaffPhraseView(await response.json());
+    } catch (error) {
+      document.getElementById("card").textContent = "The app is not responding: " + error;
+    }
+  }
+
+  function showRoutedCard(card) {
+    if (card.kind === "staff_phrase") {
+      openStaffPhraseView(card);
+      return;
+    }
+    renderAnswerCard(document.getElementById("card"), card);
+  }
+
+  async function askTranscript(event) {
+    event.preventDefault();
+    const transcript = document.getElementById("transcript-input").value;
+    try {
+      const response = await fetch("/api/transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: transcript }),
+      });
+      showRoutedCard(await response.json());
     } catch (error) {
       document.getElementById("card").textContent = "The app is not responding: " + error;
     }
@@ -128,6 +267,7 @@
     document.getElementById("staff-phrase-view").hidden = true;
   });
   document.getElementById("rate-form").addEventListener("submit", saveRate);
+  document.getElementById("transcript-form").addEventListener("submit", askTranscript);
   showStatusCard();
 </script>
 </body>

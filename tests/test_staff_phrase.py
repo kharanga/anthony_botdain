@@ -59,6 +59,7 @@ def test_asking_for_an_unknown_phrase_is_not_found(client):
 def client_for_pack_copy(tmp_path):
     packs_dir = tmp_path / "packs"
     shutil.copytree(REPO_PACKS_DIR / "cr", packs_dir / "cr")
+    shutil.copytree(REPO_PACKS_DIR / "global", packs_dir / "global")
     config_path = tmp_path / "config.toml"
     write_config(config_path, tmp_path / "data", DEFAULT_MODEL_ENDPOINT_URL)
     config_path.write_text(config_path.read_text().replace(f'packs_dir = "{REPO_PACKS_DIR}"', f'packs_dir = "{packs_dir}"'))
