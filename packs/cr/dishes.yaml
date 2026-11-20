@@ -1,5 +1,5 @@
 - name: Gallo pinto
-  aliases: [pinto]
+  aliases: [pinto, gallopinto]
   ingredients:
     rice: usual
     black beans: usual
@@ -13,7 +13,7 @@
   reviewed: false
 
 - name: Casado
-  aliases: [plato casado]
+  aliases: [plato casado, casados]
   ingredients:
     rice: usual
     black beans: usual
@@ -25,7 +25,7 @@
     fish: sometimes
     egg: sometimes
     corn tortilla: sometimes
-  source: https://en.wikipedia.org/wiki/Casado_(food)
+  source: https://en.wikipedia.org/wiki/Casado
   reviewed: false
 
 - name: Olla de carne
@@ -50,7 +50,7 @@
     pico de gallo: usual
     tortilla chips: usual
     avocado: sometimes
-  source: https://en.wikipedia.org/wiki/Chifrijo
+  source: https://es.wikipedia.org/wiki/Chifrijo
   reviewed: false
 
 - name: Rice and beans
@@ -78,7 +78,7 @@
   reviewed: false
 
 - name: Ceviche
-  aliases: [ceviche de pescado, ceviche tico, cebiche]
+  aliases: [ceviche de pescado, ceviche d/ pescado, ceviche de corvina, ceviche tico, cebiche, cebiche de pescado]
   ingredients:
     raw fish: usual
     lime juice: usual
@@ -90,19 +90,21 @@
   reviewed: false
 
 - name: Arroz con mariscos
-  aliases: [arroz marinero]
+  aliases: [arroz c/ mariscos, arroz c/mariscos, arroz marinero]
   ingredients:
     rice: usual
     shrimp: usual
     squid: usual
-    clams: sometimes
-    mussels: sometimes
+    mixed seafood: usual
+    clam: sometimes
+    mussel: sometimes
     octopus: sometimes
     crab: sometimes
-  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  source: https://es.wikipedia.org/wiki/Arroz_con_mariscos
   reviewed: false
 
 - name: Arroz con pollo
+  aliases: [arroz c/ pollo, arroz c/pollo]
   ingredients:
     rice: usual
     chicken: usual
@@ -148,4 +150,1186 @@
     carrot: sometimes
     sweet pepper: sometimes
   source: https://en.wikipedia.org/wiki/Tamale
+  reviewed: false
+
+- name: Gallo pinto con huevo
+  aliases: [gallo pinto c/ huevo, gallo pinto c/huevo, pinto con huevo, pinto c/ huevo, pinto c/huevo]
+  ingredients:
+    rice: usual
+    black beans: usual
+    egg: usual
+    onion: usual
+    sweet pepper: usual
+    cilantro: usual
+    salsa Lizano: usual
+    sour cream: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Gallo_pinto
+  reviewed: false
+
+- name: Desayuno típico
+  aliases: [desayuno tico, desayuno típico costarricense, típico]
+  ingredients:
+    rice: usual
+    black beans: usual
+    egg: usual
+    sour cream: usual
+    fried ripe plantain: sometimes
+    cheese: sometimes
+    corn tortilla: sometimes
+    sausage: sometimes
+  source: https://en.wikipedia.org/wiki/Gallo_pinto
+  reviewed: false
+
+- name: Casado con pollo
+  aliases: [casado c/ pollo, casado c/pollo, casado de pollo]
+  ingredients:
+    chicken: usual
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    picadillo: sometimes
+    egg: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Casado con pescado
+  aliases: [casado c/ pescado, casado c/pescado, casado de pescado, casado con filete, casado c/ filete]
+  ingredients:
+    fish: usual
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    wheat flour: sometimes
+    picadillo: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Casado con bistec
+  aliases: [casado c/ bistec, casado c/bistec, casado de bistec, casado con carne, casado c/ carne, casado c/carne, casado de res]
+  ingredients:
+    beef: usual
+    onion: usual
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    picadillo: sometimes
+    egg: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Casado con chuleta
+  aliases: [casado c/ chuleta, casado c/chuleta, casado de chuleta, casado con cerdo, casado c/ cerdo]
+  ingredients:
+    pork chop: usual
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    picadillo: sometimes
+    egg: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Casado con camarones
+  aliases: [casado c/ camarones, casado c/camarones, casado de camarones, casado con camarón]
+  ingredients:
+    shrimp: usual
+    garlic: usual
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    butter: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Casado vegetariano
+  aliases: [casado vegano]
+  ingredients:
+    rice: usual
+    black beans: usual
+    salad: usual
+    fried ripe plantain: usual
+    egg: sometimes
+    cheese: sometimes
+    picadillo: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Plato del día
+  aliases: [plato ejecutivo, almuerzo ejecutivo]
+  ingredients:
+    rice: usual
+    black beans: usual
+    salad: usual
+    natural fruit juice: usual
+    chicken: sometimes
+    beef: sometimes
+    pork: sometimes
+    fish: sometimes
+    fried ripe plantain: sometimes
+  source: https://en.wikivoyage.org/wiki/Costa_Rica#Eat
+  reviewed: false
+
+- name: Arroz con camarones
+  aliases: [arroz c/ camarones, arroz c/camarones, arroz con camarón, arroz c/ camarón, arroz c/camarón, arroz de camarones, arroz camarones]
+  ingredients:
+    rice: usual
+    shrimp: usual
+    sweet pepper: usual
+    onion: usual
+    cilantro: usual
+    carrot: sometimes
+    celery: sometimes
+    salsa Lizano: sometimes
+    seafood broth: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz con carne
+  aliases: [arroz c/ carne, arroz c/carne, arroz con res]
+  ingredients:
+    rice: usual
+    beef: usual
+    sweet pepper: usual
+    onion: usual
+    carrot: sometimes
+    salsa Lizano: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz con cerdo
+  aliases: [arroz c/ cerdo, arroz c/cerdo, arroz con chancho]
+  ingredients:
+    rice: usual
+    pork: usual
+    sweet pepper: usual
+    onion: usual
+    carrot: sometimes
+    salsa Lizano: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz con atún
+  aliases: [arroz c/ atún, arroz c/atún]
+  ingredients:
+    rice: usual
+    tuna: usual
+    sweet pepper: usual
+    onion: usual
+    carrot: sometimes
+    mayonnaise: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz con palmito
+  aliases: [arroz c/ palmito, arroz c/palmito]
+  ingredients:
+    rice: usual
+    heart of palm: usual
+    béchamel sauce: usual
+    cheese: usual
+    sweet pepper: sometimes
+    corn: sometimes
+    ham: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz a la paella
+  aliases: [arroz paella, arroz a la valenciana]
+  ingredients:
+    rice: usual
+    chicken: usual
+    shrimp: usual
+    mixed seafood: usual
+    sweet pepper: usual
+    squid: sometimes
+    clam: sometimes
+    mussel: sometimes
+    pork: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz guacho
+  aliases: [arroz aguado]
+  ingredients:
+    rice: usual
+    broth: usual
+    pork: sometimes
+    chicken: sometimes
+    vegetables: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Arroz jardinero
+  aliases: [arroz c/ vegetales, arroz con vegetales, arroz con verduras]
+  ingredients:
+    rice: usual
+    carrot: usual
+    green beans: usual
+    sweet pepper: usual
+    corn: sometimes
+    peas: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Picadillo de papa
+  aliases: [picadillo de papas, picadillo papa]
+  ingredients:
+    potato: usual
+    onion: usual
+    sweet pepper: usual
+    cilantro: usual
+    ground beef: sometimes
+    chorizo: sometimes
+  source: https://en.wikipedia.org/wiki/Picadillo
+  reviewed: false
+
+- name: Picadillo de chayote
+  aliases: [picadillo chayote]
+  ingredients:
+    chayote: usual
+    onion: usual
+    sweet pepper: usual
+    corn: sometimes
+    ground beef: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Picadillo de arracache
+  aliases: [picadillo de arracacha, picadillo arracache]
+  ingredients:
+    arracache: usual
+    onion: usual
+    sweet pepper: usual
+    ground beef: sometimes
+    chorizo: sometimes
+  source: https://en.wikipedia.org/wiki/Arracacia_xanthorrhiza
+  reviewed: false
+
+- name: Picadillo de vainicas
+  aliases: [picadillo de vainica]
+  ingredients:
+    green beans: usual
+    carrot: usual
+    onion: usual
+    ground beef: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Gallos
+  aliases: [gallo, gallitos, gallo de picadillo, gallos de picadillo]
+  ingredients:
+    corn tortilla: usual
+    picadillo: usual
+    beef: sometimes
+    chicken: sometimes
+    sausage: sometimes
+    egg: sometimes
+  source: https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_Costa_Rica
+  reviewed: false
+
+- name: Empanadas
+  aliases: [empanada, empanadas ticas]
+  ingredients:
+    corn masa: usual
+    frying oil: usual
+    ground beef: sometimes
+    chicken: sometimes
+    cheese: sometimes
+    black beans: sometimes
+    potato: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Empanada de queso
+  aliases: [empanadas de queso, empanada c/ queso]
+  ingredients:
+    corn masa: usual
+    cheese: usual
+    frying oil: usual
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Empanada de frijoles
+  aliases: [empanada de frijol, empanadas de frijoles, empanada de frijoles molidos]
+  ingredients:
+    corn masa: usual
+    black beans: usual
+    frying oil: usual
+    cheese: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Empanada de carne
+  aliases: [empanadas de carne, empanada de res, empanada de picadillo]
+  ingredients:
+    corn masa: usual
+    ground beef: usual
+    frying oil: usual
+    potato: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Empanada de pollo
+  aliases: [empanadas de pollo]
+  ingredients:
+    corn masa: usual
+    chicken: usual
+    frying oil: usual
+    potato: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Empanada de chiverre
+  aliases: [empanadas de chiverre, empanada chiverre]
+  ingredients:
+    wheat flour: usual
+    chiverre squash jam: usual
+    sugar: usual
+    butter: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Enyucados
+  aliases: [enyucado]
+  ingredients:
+    yuca: usual
+    frying oil: usual
+    ground beef: sometimes
+    cheese: sometimes
+    chicken: sometimes
+  source: https://es.wikipedia.org/wiki/Enyucado
+  reviewed: false
+
+- name: Yuca frita
+  aliases: [yucas fritas, yuca frita con chicharrón]
+  ingredients:
+    yuca: usual
+    frying oil: usual
+    salt: usual
+    chicharrón: sometimes
+    lime: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Chicharrones
+  aliases: [chicharrón, chicharrones de cerdo, chicharrón de cerdo]
+  ingredients:
+    pork: usual
+    frying oil: usual
+    salt: usual
+    lime: sometimes
+    yuca: sometimes
+  source: https://en.wikipedia.org/wiki/Chicharr%C3%B3n
+  reviewed: false
+
+- name: Chorreadas
+  aliases: [chorreada, chorreadas con natilla]
+  ingredients:
+    fresh corn: usual
+    sugar: usual
+    sour cream: sometimes
+    egg: sometimes
+    milk: sometimes
+    wheat flour: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Tortilla con queso
+  aliases: [tortilla c/ queso, tortilla c/queso, tortillas con queso, tortilla de queso, tortilla aliñada]
+  ingredients:
+    corn masa: usual
+    cheese: usual
+    sour cream: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Tamal asado
+  aliases: [tamales asados]
+  ingredients:
+    corn masa: usual
+    sour cream: usual
+    cheese: usual
+    sugar: usual
+    butter: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Tamal de elote
+  aliases: [tamales de elote, tamal de maíz]
+  ingredients:
+    fresh corn: usual
+    sugar: usual
+    corn husk wrapping: usual
+    milk: sometimes
+    butter: sometimes
+  source: https://en.wikipedia.org/wiki/Tamale
+  reviewed: false
+
+- name: Tamal de pollo
+  aliases: [tamales de pollo]
+  ingredients:
+    corn masa: usual
+    chicken: usual
+    rice: usual
+    banana leaf wrapping: usual
+    sweet pepper: sometimes
+    olives: sometimes
+    carrot: sometimes
+  source: https://en.wikipedia.org/wiki/Tamale
+  reviewed: false
+
+- name: Pozol
+  aliases: [pozole, sopa de pozol]
+  ingredients:
+    hominy corn: usual
+    pork: usual
+    onion: usual
+    sweet pepper: sometimes
+    cilantro: sometimes
+  source: https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_Costa_Rica
+  reviewed: false
+
+- name: Sopa de mondongo
+  aliases: [mondongo, mondongo en sopa]
+  ingredients:
+    beef tripe: usual
+    potato: usual
+    yuca: usual
+    carrot: usual
+    onion: usual
+    cilantro: usual
+    chayote: sometimes
+    corn on the cob: sometimes
+  source: https://en.wikipedia.org/wiki/Sopa_de_mondongo
+  reviewed: false
+
+- name: Sopa de pollo
+  aliases: [sopa c/ pollo, caldo de pollo]
+  ingredients:
+    chicken: usual
+    potato: usual
+    carrot: usual
+    chayote: usual
+    cilantro: usual
+    corn on the cob: sometimes
+    yuca: sometimes
+    noodles: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Sopa de mariscos
+  aliases: [sopa d/ mariscos, sopa de marisco, sopa marinera, sopa de frutos del mar]
+  ingredients:
+    mixed seafood: usual
+    seafood broth: usual
+    shrimp: usual
+    fish: usual
+    squid: sometimes
+    clam: sometimes
+    mussel: sometimes
+    crab: sometimes
+    octopus: sometimes
+    coconut milk: sometimes
+    cream: sometimes
+  source: https://es.wikipedia.org/wiki/Sopa_de_mariscos
+  reviewed: false
+
+- name: Sopa de pescado
+  aliases: [sopa d/ pescado, caldo de pescado, sopa de corvina]
+  ingredients:
+    fish: usual
+    onion: usual
+    cilantro: usual
+    potato: sometimes
+    carrot: sometimes
+    coconut milk: sometimes
+    shrimp: sometimes
+    seafood broth: sometimes
+  source: https://en.wikipedia.org/wiki/Fish_soup
+  reviewed: false
+
+- name: Sopa de camarones
+  aliases: [sopa de camarón, sopa c/ camarones, sopa d/ camarones, caldo de camarones]
+  ingredients:
+    shrimp: usual
+    seafood broth: usual
+    onion: usual
+    cilantro: usual
+    potato: sometimes
+    cream: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Crema de almejas
+  aliases: [crema de almeja, sopa de almejas]
+  ingredients:
+    clam: usual
+    milk: usual
+    cream: usual
+    butter: usual
+    wheat flour: usual
+    onion: usual
+    potato: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Mariscada
+  aliases: [mariscada tica, plato de mariscos, parrillada de mariscos]
+  ingredients:
+    mixed seafood: usual
+    shrimp: usual
+    fish: usual
+    squid: usual
+    garlic: usual
+    clam: sometimes
+    mussel: sometimes
+    octopus: sometimes
+    crab: sometimes
+    lobster: sometimes
+    langostino: sometimes
+    cream: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Salpicón de mariscos
+  aliases: [salpicón de marisco]
+  ingredients:
+    mixed seafood: usual
+    shrimp: usual
+    onion: usual
+    lime juice: usual
+    cilantro: usual
+    octopus: sometimes
+    squid: sometimes
+    fish: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Langosta a la parrilla
+  aliases: [langosta a la plancha, langosta al ajillo, langosta, langosta del caribe, langosta entera]
+  ingredients:
+    lobster: usual
+    butter: usual
+    garlic: usual
+    lime: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Langostinos al ajillo
+  aliases: [langostinos al ajo, langostinos en salsa de ajo, langostinos a la plancha]
+  ingredients:
+    langostino: usual
+    garlic: usual
+    butter: usual
+    white wine: sometimes
+  source: https://en.wikipedia.org/wiki/Gambas_al_ajillo
+  reviewed: false
+
+- name: Camarones al ajillo
+  aliases: [camarones al ajo, camarón al ajillo, camarones en salsa de ajo, camarones a la plancha]
+  ingredients:
+    shrimp: usual
+    garlic: usual
+    butter: usual
+    white wine: sometimes
+    rice: sometimes
+  source: https://en.wikipedia.org/wiki/Gambas_al_ajillo
+  reviewed: false
+
+- name: Camarones empanizados
+  aliases: [camarones apanados, camarones rebozados, camarones empanados, camarón empanizado]
+  ingredients:
+    shrimp: usual
+    wheat flour: usual
+    breadcrumbs: usual
+    egg: usual
+    frying oil: usual
+  source: https://en.wikipedia.org/wiki/Shrimp_and_prawn_as_food
+  reviewed: false
+
+- name: Camarones a la diabla
+  aliases: [camarón a la diabla]
+  ingredients:
+    shrimp: usual
+    chili pepper: usual
+    tomato: usual
+    garlic: usual
+    butter: sometimes
+  source: https://en.wikipedia.org/wiki/Shrimp_and_prawn_as_food
+  reviewed: false
+
+- name: Coctel de camarones
+  aliases: [coctel de camarón, coctel camarón, cocktail de camarones]
+  ingredients:
+    shrimp: usual
+    ketchup: usual
+    lime juice: usual
+    onion: usual
+    cilantro: usual
+    avocado: sometimes
+    saltine crackers: sometimes
+  source: https://en.wikipedia.org/wiki/Prawn_cocktail
+  reviewed: false
+
+- name: Ceviche de camarón
+  aliases: [ceviche de camarones, ceviche camarón, ceviche c/ camarón, cebiche de camarón]
+  ingredients:
+    shrimp: usual
+    lime juice: usual
+    onion: usual
+    cilantro: usual
+    sweet pepper: usual
+  source: https://en.wikipedia.org/wiki/Ceviche
+  reviewed: false
+
+- name: Ceviche mixto
+  aliases: [ceviche de mariscos, ceviche marinero, cebiche mixto, ceviche mixto de mariscos]
+  ingredients:
+    mixed seafood: usual
+    fish: usual
+    shrimp: usual
+    lime juice: usual
+    onion: usual
+    cilantro: usual
+    squid: sometimes
+    octopus: sometimes
+    clam: sometimes
+    piangua: sometimes
+  source: https://en.wikipedia.org/wiki/Ceviche
+  reviewed: false
+
+- name: Ceviche de pulpo
+  aliases: [cebiche de pulpo, ceviche pulpo]
+  ingredients:
+    octopus: usual
+    lime juice: usual
+    onion: usual
+    cilantro: usual
+    sweet pepper: usual
+  source: https://en.wikipedia.org/wiki/Ceviche
+  reviewed: false
+
+- name: Ceviche de piangua
+  aliases: [ceviche de pianguas, cebiche de piangua]
+  ingredients:
+    piangua: usual
+    lime juice: usual
+    onion: usual
+    cilantro: usual
+    sweet pepper: sometimes
+  source: https://en.wikipedia.org/wiki/Anadara_tuberculosa
+  reviewed: false
+
+- name: Ostras al natural
+  aliases: [ostras, ostiones, ostiones al natural]
+  ingredients:
+    oyster: usual
+    lime: usual
+    salt: usual
+    hot sauce: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Calamares fritos
+  aliases: [calamar frito, calamares a la romana, aros de calamar, calamares empanizados]
+  ingredients:
+    squid: usual
+    wheat flour: usual
+    frying oil: usual
+    egg: sometimes
+    lime: sometimes
+  source: https://en.wikipedia.org/wiki/Squid_as_food
+  reviewed: false
+
+- name: Pulpo al ajillo
+  aliases: [pulpo al ajo, pulpo en salsa de ajo]
+  ingredients:
+    octopus: usual
+    garlic: usual
+    butter: usual
+    white wine: sometimes
+  source: https://en.wikipedia.org/wiki/Octopus_as_food
+  reviewed: false
+
+- name: Almejas al ajillo
+  aliases: [almejas al ajo, almejas en salsa de ajo, almejas al vino]
+  ingredients:
+    clam: usual
+    garlic: usual
+    butter: usual
+    white wine: sometimes
+  source: https://en.wikipedia.org/wiki/Clam
+  reviewed: false
+
+- name: Pescado entero frito
+  aliases: [pescado frito, pargo frito, pargo rojo frito, pargo entero frito, pescado entero]
+  ingredients:
+    fish: usual
+    frying oil: usual
+    salt: usual
+    lime: usual
+    patacones: sometimes
+    salad: sometimes
+    garlic: sometimes
+  source: https://en.wikipedia.org/wiki/Fried_fish
+  reviewed: false
+
+- name: Filete de pescado al ajillo
+  aliases: [filete al ajillo, pescado al ajillo, corvina al ajillo, filete de corvina al ajillo]
+  ingredients:
+    fish: usual
+    garlic: usual
+    butter: usual
+    rice: sometimes
+    salad: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Filete de pescado empanizado
+  aliases: [pescado empanizado, corvina empanizada, filete empanizado, milanesa de pescado, filete de corvina empanizado]
+  ingredients:
+    fish: usual
+    wheat flour: usual
+    breadcrumbs: usual
+    egg: usual
+    frying oil: usual
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Filete de pescado a la plancha
+  aliases: [pescado a la plancha, filete a la plancha, corvina a la plancha, pescado a la parrilla]
+  ingredients:
+    fish: usual
+    salt: usual
+    lime: sometimes
+    butter: sometimes
+    garlic: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Filete de pescado en salsa de camarones
+  aliases: [pescado en salsa de camarones, filete en salsa de camarones, filete c/ salsa de camarones, corvina en salsa de camarones]
+  ingredients:
+    fish: usual
+    shrimp: usual
+    cream: usual
+    butter: usual
+    garlic: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Filete de pescado en salsa de mariscos
+  aliases: [pescado en salsa de mariscos, filete en salsa de mariscos, filete c/ salsa de mariscos, corvina en salsa de mariscos]
+  ingredients:
+    fish: usual
+    mixed seafood: usual
+    shrimp: usual
+    cream: usual
+    squid: sometimes
+    clam: sometimes
+    mussel: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Chicharrón de pescado
+  aliases: [chicharrones de pescado]
+  ingredients:
+    fish: usual
+    wheat flour: usual
+    frying oil: usual
+    lime: sometimes
+  source: https://en.wikipedia.org/wiki/Fried_fish
+  reviewed: false
+
+- name: Rice and beans con pollo
+  aliases: [rice and beans c/ pollo, rice and beans with chicken, rice an beans con pollo, rice & beans c/ pollo, pollo caribeño]
+  ingredients:
+    rice: usual
+    red beans: usual
+    coconut milk: usual
+    chicken: usual
+    thyme: usual
+    Panamanian chili pepper: sometimes
+    fried ripe plantain: sometimes
+    coleslaw: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Rice and beans con pescado
+  aliases: [rice and beans c/ pescado, rice and beans with fish, rice an beans con pescado, rice & beans c/ pescado]
+  ingredients:
+    rice: usual
+    red beans: usual
+    coconut milk: usual
+    fish: usual
+    thyme: usual
+    Panamanian chili pepper: sometimes
+    fried ripe plantain: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Pollo jerk
+  aliases: [jerk chicken, pollo a la jerk, pollo jamaiquino]
+  ingredients:
+    chicken: usual
+    allspice: usual
+    scotch bonnet pepper: usual
+    thyme: usual
+    onion: usual
+    rice and beans: sometimes
+  source: https://en.wikipedia.org/wiki/Jerk_(cooking)
+  reviewed: false
+
+- name: Patí
+  aliases: [patís, patty, patties, patí limonense]
+  ingredients:
+    wheat flour: usual
+    ground beef: usual
+    Panamanian chili pepper: usual
+    onion: usual
+    thyme: usual
+    butter: sometimes
+  source: https://en.wikipedia.org/wiki/Jamaican_patty
+  reviewed: false
+
+- name: Pan bon
+  aliases: [pan bom, panbon]
+  ingredients:
+    wheat flour: usual
+    brown sugar: usual
+    cheese: usual
+    butter: usual
+    raisins: sometimes
+    ginger: sometimes
+  source: https://es.wikipedia.org/wiki/Pan_bon
+  reviewed: false
+
+- name: Plantain tart
+  aliases: [tarta de plátano, pie de plátano, plantintá]
+  ingredients:
+    ripe plantain: usual
+    wheat flour: usual
+    sugar: usual
+    butter: usual
+    cinnamon: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Plátano maduro frito
+  aliases: [plátano maduro, plátanos maduros, maduro, maduros, maduro frito]
+  ingredients:
+    ripe plantain: usual
+    frying oil: usual
+  source: https://es.wikipedia.org/wiki/Pl%C3%A1tano_maduro
+  reviewed: false
+
+- name: Plátano en gloria
+  aliases: [plátanos en gloria]
+  ingredients:
+    ripe plantain: usual
+    sugar: usual
+    cinnamon: usual
+    butter: sometimes
+    cheese: sometimes
+    cream: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Carne asada
+  aliases: [carne a la parrilla, lomito a la parrilla]
+  ingredients:
+    beef: usual
+    salt: usual
+    lime: sometimes
+    chimichurri: sometimes
+    corn tortilla: sometimes
+  source: https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_Costa_Rica
+  reviewed: false
+
+- name: Bistec encebollado
+  aliases: [bistec c/ cebolla, bistec con cebolla, bistec en salsa, bistec]
+  ingredients:
+    beef: usual
+    onion: usual
+    tomato: sometimes
+    salsa Lizano: sometimes
+  source: https://en.wikipedia.org/wiki/Casado
+  reviewed: false
+
+- name: Chuleta de cerdo
+  aliases: [chuleta, chuleta frita, chuleta de chancho, chuletas]
+  ingredients:
+    pork chop: usual
+    salt: usual
+    garlic: sometimes
+    onion: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Chile relleno
+  aliases: [chiles rellenos, chile dulce relleno]
+  ingredients:
+    sweet pepper: usual
+    ground beef: usual
+    onion: usual
+    egg: sometimes
+    wheat flour: sometimes
+    cheese: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Barbudos
+  aliases: [barbudo]
+  ingredients:
+    green beans: usual
+    egg: usual
+    frying oil: usual
+    wheat flour: sometimes
+    cheese: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Macarrones en salsa blanca
+  aliases: [macarrones c/ salsa blanca, macarrones con salsa blanca]
+  ingredients:
+    pasta: usual
+    milk: usual
+    butter: usual
+    wheat flour: usual
+    cheese: sometimes
+    ham: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Ensalada de palmito
+  aliases: [palmito, ensalada c/ palmito]
+  ingredients:
+    heart of palm: usual
+    tomato: usual
+    lettuce: sometimes
+    lime: sometimes
+    mayonnaise: sometimes
+  source: https://en.wikipedia.org/wiki/Heart_of_palm
+  reviewed: false
+
+- name: Pejibaye
+  aliases: [pejibayes, pejibaye con mayonesa, pejibaye c/ mayonesa]
+  ingredients:
+    peach palm fruit: usual
+    salt: usual
+    mayonnaise: sometimes
+  source: https://en.wikipedia.org/wiki/Bactris_gasipaes
+  reviewed: false
+
+- name: Elote
+  aliases: [elote asado, elote cocinado, elotes]
+  ingredients:
+    corn on the cob: usual
+    salt: usual
+    butter: sometimes
+  source: https://en.wikipedia.org/wiki/Corn_on_the_cob
+  reviewed: false
+
+- name: Cuajada con tortilla
+  aliases: [cuajada, cuajada c/ tortilla, tortilla con cuajada]
+  ingredients:
+    fresh curd cheese: usual
+    corn tortilla: usual
+    salt: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Rosquillas
+  aliases: [rosquilla, rosquillas de maíz]
+  ingredients:
+    corn masa: usual
+    cheese: usual
+    butter: sometimes
+    egg: sometimes
+  source: https://es.wikipedia.org/wiki/Rosquilla
+  reviewed: false
+
+- name: Bizcochos
+  aliases: [bizcocho, biscochos, biscocho]
+  ingredients:
+    corn masa: usual
+    cheese: usual
+    sour cream: sometimes
+    butter: sometimes
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Tres leches
+  aliases: [pastel de tres leches, queque de tres leches, queque tres leches, torta tres leches]
+  ingredients:
+    wheat flour: usual
+    egg: usual
+    condensed milk: usual
+    evaporated milk: usual
+    cream: usual
+    sugar: usual
+    rum: sometimes
+    cinnamon: sometimes
+  source: https://en.wikipedia.org/wiki/Tres_leches_cake
+  reviewed: false
+
+- name: Arroz con leche
+  aliases: [arroz c/ leche, arroz c/leche]
+  ingredients:
+    rice: usual
+    milk: usual
+    sugar: usual
+    cinnamon: usual
+    condensed milk: sometimes
+    raisins: sometimes
+    clove: sometimes
+  source: https://en.wikipedia.org/wiki/Arroz_con_leche
+  reviewed: false
+
+- name: Flan de coco
+  aliases: [flan c/ coco]
+  ingredients:
+    coconut: usual
+    egg: usual
+    condensed milk: usual
+    evaporated milk: usual
+    caramel: usual
+  source: https://en.wikipedia.org/wiki/Flan
+  reviewed: false
+
+- name: Cajeta
+  aliases: [cajetas, cajeta de leche, cajeta de coco]
+  ingredients:
+    milk: usual
+    sugar: usual
+    coconut: sometimes
+    condensed milk: sometimes
+  source: https://es.wikipedia.org/wiki/Cajeta
+  reviewed: false
+
+- name: Cocadas
+  aliases: [cocada]
+  ingredients:
+    coconut: usual
+    sugar: usual
+    condensed milk: sometimes
+    egg: sometimes
+  source: https://en.wikipedia.org/wiki/Cocada
+  reviewed: false
+
+- name: Queque navideño
+  aliases: [queque de navidad, queque de frutas]
+  ingredients:
+    wheat flour: usual
+    dried fruit: usual
+    rum: usual
+    egg: usual
+    butter: usual
+    sugar: usual
+    nuts: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Ensalada de frutas
+  aliases: [ensalada de fruta, ensalada de frutas con helado, plato de frutas]
+  ingredients:
+    watermelon: usual
+    papaya: usual
+    pineapple: usual
+    mango: sometimes
+    banana: sometimes
+    ice cream: sometimes
+    condensed milk: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Leche dormida
+  ingredients:
+    milk: usual
+    sugar: usual
+    lime: usual
+    cinnamon: usual
+  source: https://es.wikipedia.org/wiki/Gastronom%C3%ADa_de_Costa_Rica
+  reviewed: false
+
+- name: Granizado
+  aliases: [granizado con leche, granizados, copo]
+  ingredients:
+    shaved ice: usual
+    kola syrup: usual
+    condensed milk: sometimes
+    powdered milk: sometimes
+  source: https://en.wikibooks.org/wiki/Cookbook:Cuisine_of_Costa_Rica
+  reviewed: false
+
+- name: Agua dulce
+  aliases: [aguadulce, agua dulce con leche]
+  ingredients:
+    tapa de dulce: usual
+    water: usual
+    milk: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Refresco natural
+  aliases: [fresco natural, refresco, fresco, fresco de frutas, jugo natural, refresco en agua, fresco en agua]
+  ingredients:
+    fruit: usual
+    water: usual
+    sugar: usual
+    milk: sometimes
+  source: https://en.wikivoyage.org/wiki/Costa_Rica#Eat
+  reviewed: false
+
+- name: Batido
+  aliases: [batidos, batido en leche, batido en agua, batido de frutas]
+  ingredients:
+    fruit: usual
+    sugar: usual
+    ice: usual
+    milk: sometimes
+    water: sometimes
+  source: https://en.wikipedia.org/wiki/Licuado
+  reviewed: false
+
+- name: Horchata
+  aliases: [horchata de maíz, horchata tica]
+  ingredients:
+    corn flour: usual
+    cinnamon: usual
+    sugar: usual
+    milk: sometimes
+    rice: sometimes
+    cacao: sometimes
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Agua de pipa
+  aliases: [pipa, pipa fría, coco frío]
+  ingredients:
+    coconut water: usual
+  source: https://en.wikipedia.org/wiki/Costa_Rican_cuisine
+  reviewed: false
+
+- name: Michelada
+  aliases: [chelada, cerveza michelada]
+  ingredients:
+    beer: usual
+    lime juice: usual
+    salt: usual
+    hot sauce: sometimes
+    worcestershire sauce: sometimes
+    clamato: sometimes
+  source: https://en.wikipedia.org/wiki/Michelada
   reviewed: false
