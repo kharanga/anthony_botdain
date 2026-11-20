@@ -141,3 +141,596 @@
     fried potatoes: usual
   source: https://en.wikipedia.org/wiki/Fish_and_chips
   reviewed: false
+
+- name: Pad thai
+  aliases: [phad thai, pad tai]
+  ingredients:
+    rice noodles: usual
+    egg: usual
+    tamarind: usual
+    fish sauce: usual
+    shrimp: usual
+    bean sprouts: usual
+    green onion: usual
+    tofu: sometimes
+    chicken: sometimes
+    crab: sometimes
+    squid: sometimes
+  source: https://en.wikipedia.org/wiki/Pad_thai
+  reviewed: false
+
+- name: Paella
+  aliases: [paella valenciana, paella mixta]
+  ingredients:
+    rice: usual
+    saffron: usual
+    olive oil: usual
+    chicken: sometimes
+    rabbit: sometimes
+    shrimp: sometimes
+    mixed seafood: sometimes
+    seafood broth: sometimes
+    mussel: sometimes
+    clam: sometimes
+    squid: sometimes
+  source: https://en.wikipedia.org/wiki/Paella
+  reviewed: false
+
+- name: Jambalaya
+  ingredients:
+    rice: usual
+    sausage: usual
+    onion: usual
+    celery: usual
+    bell pepper: usual
+    chicken: sometimes
+    tomato: sometimes
+    shrimp: sometimes
+    crayfish: sometimes
+  source: https://en.wikipedia.org/wiki/Jambalaya
+  reviewed: false
+
+- name: Gumbo
+  ingredients:
+    roux: usual
+    onion: usual
+    celery: usual
+    bell pepper: usual
+    rice: usual
+    okra: sometimes
+    sausage: sometimes
+    chicken: sometimes
+    shrimp: sometimes
+    crab: sometimes
+    crayfish: sometimes
+    oyster: sometimes
+    seafood broth: sometimes
+  source: https://en.wikipedia.org/wiki/Gumbo
+  reviewed: false
+
+- name: Bouillabaisse
+  ingredients:
+    fish: usual
+    mixed seafood: usual
+    tomato: usual
+    fennel: usual
+    saffron: usual
+    garlic: usual
+    olive oil: usual
+    crab: sometimes
+    langostino: sometimes
+    mussel: sometimes
+    octopus: sometimes
+  source: https://en.wikipedia.org/wiki/Bouillabaisse
+  reviewed: false
+
+- name: Cioppino
+  ingredients:
+    crab: usual
+    shrimp: usual
+    clam: usual
+    mussel: usual
+    fish: usual
+    tomato: usual
+    white wine: usual
+    scallop: sometimes
+    squid: sometimes
+    seafood broth: sometimes
+  source: https://en.wikipedia.org/wiki/Cioppino
+  reviewed: false
+
+- name: Seafood pasta
+  aliases: [pasta frutti di mare, spaghetti frutti di mare, frutti di mare, pasta alla pescatora, spaghetti alla pescatora, spaghetti marinara, pasta marinera]
+  ingredients:
+    pasta: usual
+    mixed seafood: usual
+    garlic: usual
+    olive oil: usual
+    shrimp: sometimes
+    clam: sometimes
+    mussel: sometimes
+    squid: sometimes
+    tomato sauce: sometimes
+  source: https://en.wikipedia.org/wiki/Marinara_sauce
+  reviewed: false
+
+- name: Spaghetti carbonara
+  aliases: [carbonara, pasta carbonara]
+  ingredients:
+    spaghetti: usual
+    egg: usual
+    cured pork: usual
+    pecorino cheese: usual
+    black pepper: usual
+    cream: sometimes
+  source: https://en.wikipedia.org/wiki/Carbonara
+  reviewed: false
+
+- name: Lasagna
+  aliases: [lasaña, lasagne]
+  ingredients:
+    pasta sheets: usual
+    ground beef: usual
+    tomato sauce: usual
+    cheese: usual
+    bechamel sauce: sometimes
+  source: https://en.wikipedia.org/wiki/Lasagna
+  reviewed: false
+
+- name: Spaghetti bolognese
+  aliases: [spaghetti a la boloñesa, pasta bolognese, ragù alla bolognese, bolognese]
+  ingredients:
+    spaghetti: usual
+    ground beef: usual
+    tomato: usual
+    onion: usual
+    carrot: usual
+    celery: usual
+    pork: sometimes
+    wine: sometimes
+  source: https://en.wikipedia.org/wiki/Bolognese_sauce
+  reviewed: false
+
+- name: Risotto
+  ingredients:
+    arborio rice: usual
+    broth: usual
+    butter: usual
+    parmesan cheese: usual
+    onion: usual
+    white wine: sometimes
+    mushroom: sometimes
+    shrimp: sometimes
+    seafood broth: sometimes
+  source: https://en.wikipedia.org/wiki/Risotto
+  reviewed: false
+
+- name: Ramen
+  ingredients:
+    wheat noodles: usual
+    broth: usual
+    soy sauce: sometimes
+    miso: sometimes
+    pork: sometimes
+    egg: sometimes
+    green onion: sometimes
+    shrimp: sometimes
+    crab: sometimes
+    scallop: sometimes
+    squid: sometimes
+  source: https://en.wikipedia.org/wiki/Ramen
+  reviewed: false
+
+- name: Tempura
+  ingredients:
+    wheat batter: usual
+    vegetables: sometimes
+    shrimp: sometimes
+    squid: sometimes
+    fish: sometimes
+  source: https://en.wikipedia.org/wiki/Tempura
+  reviewed: false
+
+- name: Tom yum
+  aliases: [tom yam, tom yum goong, sopa tom yum]
+  ingredients:
+    lemongrass: usual
+    kaffir lime leaves: usual
+    galangal: usual
+    chili pepper: usual
+    lime juice: usual
+    fish sauce: usual
+    shrimp: sometimes
+    chicken: sometimes
+    pork: sometimes
+    mixed seafood: sometimes
+    mushroom: sometimes
+  source: https://en.wikipedia.org/wiki/Tom_yum
+  reviewed: false
+
+- name: Green curry
+  aliases: [thai green curry, curry verde, gaeng keow wan]
+  ingredients:
+    green curry paste: usual
+    shrimp: usual
+    coconut milk: usual
+    fish sauce: usual
+    palm sugar: usual
+    chicken: sometimes
+    beef: sometimes
+    fish: sometimes
+  source: https://en.wikipedia.org/wiki/Green_curry
+  reviewed: false
+
+- name: Red curry
+  aliases: [thai red curry, curry rojo, gaeng phet]
+  ingredients:
+    red curry paste: usual
+    shrimp: usual
+    coconut milk: usual
+    fish sauce: usual
+    chicken: sometimes
+    beef: sometimes
+    pork: sometimes
+    duck: sometimes
+  source: https://en.wikipedia.org/wiki/Red_curry
+  reviewed: false
+
+- name: Chow mein
+  ingredients:
+    egg noodles: usual
+    onion: usual
+    celery: usual
+    soy sauce: usual
+    chicken: sometimes
+    pork: sometimes
+    beef: sometimes
+    shrimp: sometimes
+    cabbage: sometimes
+    bean sprouts: sometimes
+  source: https://en.wikipedia.org/wiki/Chow_mein
+  reviewed: false
+
+- name: Chop suey
+  ingredients:
+    bean sprouts: usual
+    cabbage: usual
+    celery: usual
+    egg: sometimes
+    chicken: sometimes
+    pork: sometimes
+    beef: sometimes
+    shrimp: sometimes
+    fish: sometimes
+  source: https://en.wikipedia.org/wiki/Chop_suey
+  reviewed: false
+
+- name: Wonton soup
+  aliases: [wonton, wontons, wantan, sopa wantán]
+  ingredients:
+    wheat wrapper: usual
+    pork: usual
+    broth: usual
+    shrimp: sometimes
+    chicken: sometimes
+    egg noodles: sometimes
+  source: https://en.wikipedia.org/wiki/Wonton
+  reviewed: false
+
+- name: Har gow
+  aliases: [ha gow, shrimp dumplings, crystal shrimp dumplings]
+  ingredients:
+    shrimp: usual
+    wheat starch wrapper: usual
+    bamboo shoots: sometimes
+  source: https://en.wikipedia.org/wiki/Har_gow
+  reviewed: false
+
+- name: Siu mai
+  aliases: [shumai, shaomai, siomai]
+  ingredients:
+    pork: usual
+    shrimp: usual
+    mushroom: usual
+    wheat wrapper: usual
+    green onion: sometimes
+    crab: sometimes
+  source: https://en.wikipedia.org/wiki/Shumai
+  reviewed: false
+
+- name: Egg foo young
+  aliases: [egg foo yung, foo young, foo yong, fu yung hai]
+  ingredients:
+    egg: usual
+    bean sprouts: usual
+    onion: sometimes
+    pork: sometimes
+    chicken: sometimes
+    beef: sometimes
+    shrimp: sometimes
+    crab: sometimes
+    lobster: sometimes
+  source: https://en.wikipedia.org/wiki/Egg_foo_young
+  reviewed: false
+
+- name: Dumplings
+  aliases: [gyoza, jiaozi, potstickers]
+  ingredients:
+    wheat wrapper: usual
+    pork: sometimes
+    chicken: sometimes
+    beef: sometimes
+    cabbage: sometimes
+    shrimp: sometimes
+    fish: sometimes
+  source: https://en.wikipedia.org/wiki/Jiaozi
+  reviewed: false
+
+- name: California roll
+  aliases: [california maki, rollo california]
+  ingredients:
+    sushi rice: usual
+    nori: usual
+    imitation crab: usual
+    avocado: usual
+    cucumber: usual
+    crab: sometimes
+    mayonnaise: sometimes
+    sesame seeds: sometimes
+  source: https://en.wikipedia.org/wiki/California_roll
+  reviewed: false
+
+- name: Sashimi
+  ingredients:
+    raw fish: usual
+    soy sauce: usual
+    wasabi: usual
+    shrimp: sometimes
+    squid: sometimes
+    octopus: sometimes
+    scallop: sometimes
+  source: https://en.wikipedia.org/wiki/Sashimi
+  reviewed: false
+
+- name: Poke bowl
+  aliases: [poke]
+  ingredients:
+    raw fish: usual
+    rice: usual
+    soy sauce: usual
+    onion: sometimes
+    seaweed: sometimes
+    avocado: sometimes
+    imitation crab: sometimes
+    octopus: sometimes
+    shrimp: sometimes
+    tofu: sometimes
+  source: https://en.wikipedia.org/wiki/Poke_(dish)
+  reviewed: false
+
+- name: Burrito
+  aliases: [burritos]
+  ingredients:
+    flour tortilla: usual
+    beans: sometimes
+    rice: sometimes
+    cheese: sometimes
+    beef: sometimes
+    chicken: sometimes
+    pork: sometimes
+    fish: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Burrito
+  reviewed: false
+
+- name: Quesadilla
+  ingredients:
+    tortilla: usual
+    cheese: usual
+    chicken: sometimes
+    beef: sometimes
+    bell pepper: sometimes
+    onion: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Quesadilla
+  reviewed: false
+
+- name: Nachos
+  ingredients:
+    tortilla chips: usual
+    cheese: usual
+    jalapeño: sometimes
+    beans: sometimes
+    ground beef: sometimes
+    chicken: sometimes
+    guacamole: sometimes
+    sour cream: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Nachos
+  reviewed: false
+
+- name: Clam chowder
+  aliases: [chowder, new england clam chowder, manhattan clam chowder]
+  ingredients:
+    clam: usual
+    potato: usual
+    onion: usual
+    salt pork: usual
+    milk: sometimes
+    butter: sometimes
+    tomato: sometimes
+  source: https://en.wikipedia.org/wiki/Clam_chowder
+  reviewed: false
+
+- name: Bisque
+  aliases: [lobster bisque]
+  ingredients:
+    cream: usual
+    lobster: sometimes
+    shrimp: sometimes
+    crab: sometimes
+    crayfish: sometimes
+    langostino: sometimes
+    seafood broth: sometimes
+    tomato: sometimes
+  source: https://en.wikipedia.org/wiki/Bisque_(food)
+  reviewed: false
+
+- name: Surf and turf
+  aliases: [surf & turf, surf n turf, mar y tierra, reef and beef]
+  ingredients:
+    beef steak: usual
+    lobster: sometimes
+    shrimp: sometimes
+    squid: sometimes
+    scallop: sometimes
+  source: https://en.wikipedia.org/wiki/Surf_and_turf
+  reviewed: false
+
+- name: Spaghetti alle vongole
+  aliases: [spaghetti vongole, linguine alle vongole, linguine with clams]
+  ingredients:
+    spaghetti: usual
+    clam: usual
+    garlic: usual
+    parsley: usual
+    olive oil: usual
+    white wine: sometimes
+  source: https://en.wikipedia.org/wiki/Spaghetti_alle_vongole
+  reviewed: false
+
+- name: Scampi
+  aliases: [shrimp scampi]
+  ingredients:
+    garlic: usual
+    olive oil: usual
+    white wine: usual
+    langostino: sometimes
+    shrimp: sometimes
+    butter: sometimes
+    parmesan cheese: sometimes
+    lemon juice: sometimes
+  source: https://en.wikipedia.org/wiki/Scampi
+  reviewed: false
+
+- name: Fried calamari
+  aliases: [calamari, calamari fritti]
+  ingredients:
+    squid: usual
+    wheat flour: usual
+    lemon: sometimes
+  source: https://en.wikipedia.org/wiki/Squid_as_food
+  reviewed: false
+
+- name: Yakisoba
+  ingredients:
+    wheat noodles: usual
+    cabbage: usual
+    yakisoba sauce: usual
+    pork: sometimes
+    onion: sometimes
+    carrot: sometimes
+    squid: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Yakisoba
+  reviewed: false
+
+- name: Teriyaki
+  aliases: [chicken teriyaki, pollo teriyaki]
+  ingredients:
+    soy sauce: usual
+    mirin: usual
+    sugar: usual
+    chicken: sometimes
+    salmon: sometimes
+    beef: sometimes
+    squid: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Teriyaki
+  reviewed: false
+
+- name: Biryani
+  aliases: [biriyani, biriani]
+  ingredients:
+    rice: usual
+    spices: usual
+    chicken: sometimes
+    goat: sometimes
+    beef: sometimes
+    vegetables: sometimes
+    fish: sometimes
+    shrimp: sometimes
+  source: https://en.wikipedia.org/wiki/Biryani
+  reviewed: false
+
+- name: Chicken tikka masala
+  aliases: [tikka masala, pollo tikka masala]
+  ingredients:
+    chicken: usual
+    spices: usual
+    tomato: sometimes
+    cream: sometimes
+    yogurt: sometimes
+  source: https://en.wikipedia.org/wiki/Chicken_tikka_masala
+  reviewed: false
+
+- name: Kimchi
+  ingredients:
+    napa cabbage: usual
+    chili powder: usual
+    garlic: usual
+    ginger: usual
+    green onion: usual
+    radish: sometimes
+    shrimp: sometimes
+    fish sauce: sometimes
+  source: https://en.wikipedia.org/wiki/Kimchi
+  reviewed: false
+
+- name: Arroz negro
+  aliases: [arròs negre]
+  ingredients:
+    rice: usual
+    squid: usual
+    squid ink: usual
+    seafood broth: usual
+    garlic: usual
+    olive oil: usual
+    shrimp: sometimes
+    crab: sometimes
+  source: https://en.wikipedia.org/wiki/Arròs_negre
+  reviewed: false
+
+- name: Fideuà
+  aliases: [fideuada]
+  ingredients:
+    short noodles: usual
+    fish: usual
+    squid: usual
+    shrimp: usual
+    seafood broth: usual
+    crayfish: sometimes
+  source: https://en.wikipedia.org/wiki/Fideuà
+  reviewed: false
+
+- name: Gazpacho
+  ingredients:
+    tomato: usual
+    olive oil: usual
+    garlic: usual
+    bread: usual
+    cucumber: sometimes
+    bell pepper: sometimes
+    vinegar: sometimes
+  source: https://en.wikipedia.org/wiki/Gazpacho
+  reviewed: false
+
+- name: Ravioli
+  ingredients:
+    pasta: usual
+    cheese: sometimes
+    meat: sometimes
+    spinach: sometimes
+    lobster: sometimes
+  source: https://en.wikipedia.org/wiki/Ravioli
+  reviewed: false

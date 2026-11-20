@@ -167,3 +167,35 @@ def test_the_results_file_lists_every_unreviewed_dish():
 
 def test_the_results_file_is_regenerated_from_the_current_yaml():
     assert DEFAULT_RESULTS_PATH.read_text(encoding="utf-8") == unreviewed_dishes_report()
+
+
+@pytest.mark.parametrize(
+    ("menu_name", "hidden_shrimp"),
+    [
+        ("pad thai", "shrimp (usual)"),
+        ("Har gow", "shrimp (usual)"),
+        ("green curry", "shrimp (usual)"),
+        ("fried rice", "shrimp (sometimes)"),
+        ("paella", "shrimp (sometimes)"),
+        ("chow mein", "shrimp (sometimes)"),
+        ("Bisque", "shrimp (sometimes)"),
+        ("Scampi", "shrimp (sometimes)"),
+        ("tempura", "shrimp (sometimes)"),
+        ("kimchi", "shrimp (sometimes)"),
+    ],
+)
+def test_a_global_dish_that_hides_shrimp_without_naming_it_lists_shrimp(client, menu_name, hidden_shrimp):
+    card = looked_up_card(client, menu_name)
+
+    assert card["kind"] == "dish"
+    assert hidden_shrimp in evidence_texts(card)
+    assert all(evidence["source"].endswith("packs/global/dishes.yaml") for evidence in card["evidence"])
+
+
+def test_about_fifty_global_dishes_each_record_a_source_and_start_unreviewed(client):
+    dishes = seeded_dishes("global")
+
+    assert 45 <= len(dishes) <= 60
+    for dish in dishes:
+        assert dish["source"].startswith("https://en.wikipedia.org/wiki/")
+        assert dish["reviewed"] is False
