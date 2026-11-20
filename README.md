@@ -4,6 +4,12 @@ An offline travel companion. The plan is in `SPEC.md`; project terms are in `GLO
 
 ## Run on the Mac with fake data
 
+Photo OCR needs Tesseract with Spanish data, and the tests run it for real:
+
+```sh
+brew install tesseract tesseract-lang
+```
+
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
@@ -61,3 +67,119 @@ MODELS_DIR=/path/to/models .venv/bin/python -m travel_companion.model_benchmark
 ```
 
 It starts its own llama-server on port 8091 (`--port` to change it), measures time to first token, tokens per second, load time and peak memory, then asks a fixed set of Rate questions through the fact guardrail and records how often it rejects the model's reply. It stops the server when it finishes and rewrites `docs/results/T5-mac-model-benchmark.md`. `--speed-repeats` and `--guardrail-repeats` set how many times each prompt runs.
+
+## OCR benchmark: Tesseract vs PaddleOCR
+
+Tesseract is the default engine (`[ocr] engine = "tesseract"`). PaddleOCR is an optional extra, not a core dependency:
+
+```sh
+.venv/bin/pip install -e '.[dev,paddleocr]'
+```
+
+The first PaddleOCR run downloads its models (about 130 MB) into `~/.paddlex/official_models/`, so run it once while online. After that it works offline. Set `[ocr] engine = "paddleocr"` to use it in the app. Its real-engine test is skipped unless you ask for it:
+
+```sh
+TRAVEL_COMPANION_PADDLEOCR=1 .venv/bin/pytest -q tests/test_paddleocr_engine.py
+```
+
+Run the benchmark on the specimen photos:
+
+```sh
+.venv/bin/python -m travel_companion.ocr_benchmark --include-ocr-text
+```
+
+It runs every engine in `travel_companion.ocr` (`--engines tesseract` for one) over each photo in `--photos` (default `specimens/photos/`) that has a transcription, and writes `docs/results/T3-ocr-benchmark-specimen.md` (`--results` to change it). It reports character error rate, Allergen Term recall and false positives for accent-aware and accent-insensitive matching, how many colón signs (₡) survive, and seconds per photo. An engine that is not installed is listed as not measured. To rebuild the specimen photos and their transcriptions, run `.venv/bin/python scripts/render_specimen_photos.py`.
+
+### Real photos
+
+Real photos stay in the gitignored `data/` folder, never in the repo. Put them in `data/ocr-benchmark/` and run:
+
+```sh
+.venv/bin/python -m travel_companion.ocr_benchmark --photos data/ocr-benchmark --results docs/results/T3-ocr-benchmark-real-photos.md
+```
+
+Leave out `--include-ocr-text` for real photos: without it, the results file holds only photo file names, scores and pack Allergen Terms, never the text read from a photo. Check the file before you commit it, and give photos names that say nothing private (`menu-01.jpg`, `receipt-07.jpg`).
+
+### Transcription format
+
+Each photo needs a transcription next to it with the same name and a `.txt` extension:
+
+```text
+data/ocr-benchmark/menu-01.jpg
+data/ocr-benchmark/menu-01.txt
+```
+
+- Photos: `.jpg`, `.jpeg`, `.png`, `.tif` or `.tiff`. Export iPhone HEIC photos as JPEG first. A photo without a `.txt` is listed as skipped.
+- The `.txt` is plain UTF-8 text: type the text exactly as printed, one printed line per line, top to bottom and left to right.
+- Keep accents, `ñ` and case as printed. If the menu prints `CAMARON` without an accent, type it without one. Do not fix spelling.
+- Type the colón sign as `₡` (U+20A1; on a Mac, paste it). Keep prices as printed, for example `₡4.500`.
+- Spacing does not matter: runs of spaces, tabs and line breaks all count as one space, so a dish and its price on one row can be typed `Ceviche mixto  ₡4.800`.
+- Type every line you can read, including headings, prices and footers. Leave out only text you cannot read yourself.
+- Character error rate compares the whole transcription with the whole OCR text, so a line left out of the transcription counts as an error for any engine that reads it. Allergen Term recall uses the terms in the transcription as the truth, so every shellfish word on the page must be typed.
+
+## Known Dishes YAML
+
+Global Dishes, shared by every Country Pack, live in `packs/global/dishes.yaml`. Country dishes live in `packs/<country>/dishes.yaml`. Both files are a YAML list of dishes in this shape:
+
+```yaml
+- name: Gallo pinto
+  aliases: [pinto]
+  ingredients:
+    rice: usual
+    black beans: usual
+    egg: sometimes
+  source: https://en.wikipedia.org/wiki/Gallo_pinto
+  reviewed: false
+```
+
+- `name` and `source` are required. `source` is where the entry came from (a Wikipedia, Wikibooks or Wikivoyage URL).
+- `aliases` is optional: other names a menu might use. Lookup ignores accents and case, so don't list accent or case variants.
+- `ingredients` maps each Ingredient (lowercase English) to `usual` (almost always in the dish) or `sometimes` (depends on the kitchen). Shellfish Ingredients use exactly these names: `shrimp` (also camarón, prawn), `lobster`, `crab`, `langostino`, `crayfish`, `seafood broth`, `mixed seafood`, `imitation crab`. Mollusks (`squid`, `octopus`, `clam`, `mussel`, `scallop`, `oyster`, `piangua`) are not shellfish.
+- `reviewed` defaults to `false`. Agent-written dishes stay `false`; the user sets `true` after checking the entry.
+- A country dish with the same name as a Global Dish replaces it. Any other name or alias used twice stops the app at startup with a message naming both dishes and their files.
+- Peanut is a fake Allergen: it goes only in `tests/packs/`, never in `packs/`.
+
+After editing dishes, regenerate the list of dishes still to review in `docs/results/T2-unreviewed-known-dishes.md` (a test checks that it is current):
+
+```sh
+.venv/bin/python -m travel_companion.unreviewed_dishes
+```
+
+`POST /api/dish` with `{"name": "..."}` returns the dish card, or "Not in my guide. Ask staff." for a dish that isn't in the pack.
+
+## Push-to-talk speech-to-text (whisper.cpp)
+
+Hold **Hold to talk** on the home screen, ask in English, then let go. The browser records the mic as 16 kHz mono WAV and posts it to `POST /api/speech`. The app runs whisper.cpp's `whisper-cli` on the CPU (`-l en -ng`), so nothing leaves the machine, then sends the transcript through the same intent router as `POST /api/transcript` and shows the card it returns.
+
+1. Install whisper.cpp:
+
+   ```sh
+   brew install whisper-cpp
+   ```
+
+2. Download the English base model (about 148 MB) into the gitignored `models/` folder. The script checks its SHA-256 and does nothing if the file is already there; `MODELS_DIR` works as for the llama.cpp model:
+
+   ```sh
+   scripts/fetch_whisper_model.sh
+   ```
+
+3. Start the app (`.venv/bin/travel-companion`) and open http://127.0.0.1:8765. The browser asks for mic access the first time. `[speech]` in `config/default.toml` sets `whisper_cli` and `whisper_model_path`; if either is missing the card says speech-to-text is not available.
+
+To send a recording by hand:
+
+```sh
+say -o question.wav --file-format=WAVE --data-format=LEI16@16000 "show my allergy card"
+curl -s http://127.0.0.1:8765/api/speech -H 'Content-Type: audio/wav' --data-binary @question.wav
+```
+
+The normal tests send text transcripts and a stand-in transcriber. The real-whisper test is skipped unless you point it at the model:
+
+```sh
+TRAVEL_COMPANION_REAL_WHISPER_MODEL=models/ggml-base.en.bin .venv/bin/pytest -q tests/test_real_whisper.py
+```
+
+The benchmark speaks sample questions with macOS `say` at run time, transcribes them and rewrites `docs/results/T6-speech-to-text.md`:
+
+```sh
+.venv/bin/python -m travel_companion.speech_benchmark --model models/ggml-base.en.bin
+```

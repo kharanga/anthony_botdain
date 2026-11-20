@@ -6,6 +6,8 @@ home_currency = "USD"
 rate = 510.0
 # Relative paths are resolved against the current working directory.
 data_dir = "data"
+# Folder holding one Country Pack folder per country, plus global/ for Global Dishes.
+packs_dir = "packs"
 
 [model]
 # OpenAI-compatible chat-completions endpoint (ADR 0001). llama.cpp's llama-server on the Mac.
@@ -16,3 +18,15 @@ endpoint_url = "http://127.0.0.1:8080/v1/chat/completions"
 brightness_backend = "recording"
 # Backlight folder for "sysfs". Empty picks the first device under /sys/class/backlight.
 backlight_dir = ""
+
+[speech]
+# whisper.cpp CLI (brew install whisper-cpp) and the English model fetched by scripts/fetch_whisper_model.sh.
+whisper_cli = "whisper-cli"
+whisper_model_path = "models/ggml-base.en.bin"
+
+[ocr]
+# Engine name; "tesseract" uses the tesseract CLI with the language below.
+engine = "tesseract"
+language = "spa"
+# Lines whose lowest word confidence (0-100) is under this are flagged so they get Ask staff.
+low_confidence_threshold = 70.0

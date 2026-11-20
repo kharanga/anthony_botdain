@@ -1,0 +1,5 @@
+SUPER ESPECIMEN S.A.
+Factura 000123
+Leche 1L  1.150
+Pan cuadrado  1.600
+TOTAL  2.750

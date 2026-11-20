@@ -1,0 +1,10 @@
+country: specimen
+name: Specimen test pack
+language: es
+currencies:
+  - CRC
+  - USD
+time_zone: America/Costa_Rica
+guide:
+  zim_file: wikivoyage_en_all_maxi.zim
+  article: Costa_Rica
