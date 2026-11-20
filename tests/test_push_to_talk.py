@@ -34,6 +34,22 @@ def test_releasing_push_to_talk_returns_the_routed_card_for_what_was_said(config
     assert {"source": "transcript", "text": "I spent 5 mil on a taxi."} in card["evidence"]
 
 
+def test_whisper_writing_number_four_as_hash_four_still_finds_dish_number_four(config_path):
+    card = spoken_card(config_path, transcriber_hearing(" Does #4 have Lobster?"))
+
+    assert card["intent"] == "menu_allergen_question"
+    assert card["details"] == {"dish_number": "4", "ingredient": "lobster"}
+
+
+def test_a_spoken_paraphrase_the_rules_miss_is_routed_by_the_model(config_path, fake_model):
+    fake_model.reply_with("spending_question")
+
+    card = spoken_card(config_path, transcriber_hearing(" Tally up my outgoings."))
+
+    assert card["intent"] == "spending_question"
+    assert {"source": "intent model", "text": "model label: spending_question"} in card["evidence"]
+
+
 def test_the_home_screen_has_a_push_to_talk_control_that_sends_speech(client):
     page = client.get("/").text
 

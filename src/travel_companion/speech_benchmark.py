@@ -53,9 +53,14 @@ def word_edit_distance(reference: list[str], hypothesis: list[str]) -> int:
     return previous_row[-1]
 
 
+def comparable_details(details: dict[str, str]) -> dict[str, list[str]]:
+    return {name: comparable_words(value) for name, value in details.items()}
+
+
 def routes_like_reference(sample: dict, transcript: str) -> bool:
     card = route_transcript(transcript)
-    return card.intent == sample.get("intent") and card.details == sample.get("details", {})
+    same_details = comparable_details(card.details) == comparable_details(sample.get("details", {}))
+    return card.intent == sample.get("intent") and same_details
 
 
 def measured_sample(sample: dict, wav_path: Path, transcribe) -> dict:
@@ -110,7 +115,7 @@ Run on {run_date.isoformat()} with `.venv/bin/python -m travel_companion.speech_
 
 ## Method
 
-{len(measurements)} sample questions from `specimens/intent_samples.toml` are spoken by macOS `say` (voice {SAY_VOICE}) into 16 kHz mono WAV files at benchmark time; they are synthetic, so no real voice is recorded or committed. Each file goes through the same `whisper-cli` call that `POST /api/speech` makes, after one warm-up call. Latency is wall time for that call, including loading the model, because the app starts `whisper-cli` once per question. Word error rate compares lowercase words with punctuation removed, so "five" against "5" counts as an error. "Routes the same" checks that the transcript reaches the same intent with the same details as the typed sample, which is what the user sees.
+{len(measurements)} sample questions from `specimens/intent_samples.toml` are spoken by macOS `say` (voice {SAY_VOICE}) into 16 kHz mono WAV files at benchmark time; they are synthetic, so no real voice is recorded or committed. Each file goes through the same `whisper-cli` call that `POST /api/speech` makes, after one warm-up call. Latency is wall time for that call, including loading the model, because the app starts `whisper-cli` once per question. Word error rate compares lowercase words with punctuation removed, so "five" against "5" counts as an error. "Routes the same" checks that the cleaned transcript reaches the same intent with the same details (compared as lowercase words) as the typed sample, which is what the user sees; it uses the rules only, with no model fallback, so a misheard word is not rescued by the model.
 
 Synthetic speech is cleaner than a real voice in a restaurant, so these numbers are a best case. Measure again with real recordings and the USB mic in T15.
 

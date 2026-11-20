@@ -15,7 +15,10 @@ from travel_companion.full_screen import FullScreenView, full_screen_router
 from travel_companion.intent_router import intent_router
 from travel_companion.model_client import ModelClient
 from travel_companion.speech_to_text import Transcriber, speech_router, whisper_transcriber
+from travel_companion.ocr import ocr_engine_from_config
+from travel_companion.photo_ocr import photo_ocr_router
 from travel_companion.rate import CurrentRate, current_rate, rate_evidence, rate_router
+from travel_companion.staff_phrase import staff_phrase_router
 from travel_companion.vault import Clock, VaultSession, vault_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -52,6 +55,9 @@ def create_app(
     app.include_router(intent_router)
     app.include_router(speech_router(transcriber or whisper_transcriber(config.whisper_cli, config.whisper_model_path)))
     app.include_router(allergen_terms_router)
+    app.state.ocr_engine = ocr_engine_from_config(config.ocr_engine, config.ocr_language)
+    app.include_router(photo_ocr_router)
+    app.include_router(staff_phrase_router)
 
     @app.get("/api/status")
     def get_status() -> AnswerCard:

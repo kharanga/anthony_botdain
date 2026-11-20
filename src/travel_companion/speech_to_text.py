@@ -1,3 +1,4 @@
+import re
 import shutil
 import subprocess
 import tempfile
@@ -9,10 +10,12 @@ from fastapi.concurrency import run_in_threadpool
 
 from travel_companion.cards import AnswerCard, Evidence
 from travel_companion.intent_router import IntentCard, route_transcript
+from travel_companion.model_client import ModelClient
 
 Transcriber = Callable[[bytes], str]
 
 WHISPER_BLANK_MARKERS = ("[BLANK_AUDIO]", "(silence)", "[silence]")
+WHISPER_HASH_NUMBER = re.compile(r"#\s*(\d+)")
 
 
 class SpeechToTextUnavailable(Exception):
@@ -51,7 +54,7 @@ def cleaned_transcript(raw_transcript: str) -> str:
     transcript = " ".join(raw_transcript.split())
     for marker in WHISPER_BLANK_MARKERS:
         transcript = transcript.replace(marker, "")
-    return transcript.strip()
+    return WHISPER_HASH_NUMBER.sub(r"number \1", transcript).strip()
 
 
 def speech_unavailable_card(reason: str) -> AnswerCard:
@@ -72,14 +75,14 @@ def nothing_heard_card() -> AnswerCard:
     )
 
 
-def spoken_question_card(audio: bytes, transcriber: Transcriber) -> IntentCard | AnswerCard:
+def spoken_question_card(audio: bytes, transcriber: Transcriber, model_client: ModelClient) -> IntentCard | AnswerCard:
     try:
         transcript = cleaned_transcript(transcriber(audio))
     except SpeechToTextUnavailable as unavailable:
         return speech_unavailable_card(str(unavailable))
     if not transcript:
         return nothing_heard_card()
-    return route_transcript(transcript)
+    return route_transcript(transcript, model_client)
 
 
 def speech_router(transcriber: Transcriber) -> APIRouter:
@@ -87,6 +90,7 @@ def speech_router(transcriber: Transcriber) -> APIRouter:
 
     @router.post("/api/speech", response_model=IntentCard | AnswerCard)
     async def post_speech(request: Request) -> IntentCard | AnswerCard:
-        return await run_in_threadpool(spoken_question_card, await request.body(), transcriber)
+        audio = await request.body()
+        return await run_in_threadpool(spoken_question_card, audio, transcriber, request.app.state.model_client)
 
     return router

@@ -23,3 +23,10 @@ backlight_dir = ""
 # whisper.cpp CLI (brew install whisper-cpp) and the English model fetched by scripts/fetch_whisper_model.sh.
 whisper_cli = "whisper-cli"
 whisper_model_path = "models/ggml-base.en.bin"
+
+[ocr]
+# Engine name; "tesseract" uses the tesseract CLI with the language below.
+engine = "tesseract"
+language = "spa"
+# Lines whose lowest word confidence (0-100) is under this are flagged so they get Ask staff.
+low_confidence_threshold = 70.0

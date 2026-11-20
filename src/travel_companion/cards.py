@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-CardKind = Literal["status", "rate", "answer", "model_unavailable", "vault", "display", "intent", "unsupported_intent", "allergen_terms", "speech_unavailable", "nothing_heard"]
+CardKind = Literal["status", "rate", "answer", "model_unavailable", "vault", "display", "intent", "unsupported_intent", "allergen_terms", "staff_phrase", "ocr_lines", "unreadable_photo", "speech_unavailable", "nothing_heard"]
 
 
 class Evidence(BaseModel):
