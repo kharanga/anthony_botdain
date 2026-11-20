@@ -134,7 +134,7 @@ Global Dishes, shared by every Country Pack, live in `packs/global/dishes.yaml`.
 
 - `name` and `source` are required. `source` is where the entry came from (a Wikipedia, Wikibooks or Wikivoyage URL).
 - `aliases` is optional: other names a menu might use. Lookup ignores accents and case, so don't list accent or case variants.
-- `ingredients` maps each Ingredient (lowercase English) to `usual` (almost always in the dish) or `sometimes` (depends on the kitchen). Name crustaceans plainly: shrimp, lobster, crab, langoustine.
+- `ingredients` maps each Ingredient (lowercase English) to `usual` (almost always in the dish) or `sometimes` (depends on the kitchen). Shellfish Ingredients use exactly these names: `shrimp` (also camarón, prawn), `lobster`, `crab`, `langostino`, `crayfish`, `seafood broth`, `mixed seafood`, `imitation crab`. Mollusks (`squid`, `octopus`, `clam`, `mussel`, `scallop`, `oyster`, `piangua`) are not shellfish.
 - `reviewed` defaults to `false`. Agent-written dishes stay `false`; the user sets `true` after checking the entry.
 - A country dish with the same name as a Global Dish replaces it. Any other name or alias used twice stops the app at startup with a message naming both dishes and their files.
 - Peanut is a fake Allergen: it goes only in `tests/packs/`, never in `packs/`.
