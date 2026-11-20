@@ -104,3 +104,9 @@ def test_an_intent_card_names_the_intent_and_spells_out_its_details(client):
     assert card["title"] == "Add an expense"
     assert "5000" in card["body"]
     assert "transport" in card["body"]
+
+
+def test_number_words_after_a_digit_and_thousand_are_added_to_the_expense_amount(client):
+    card = routed_card(client, "I spent 3 thousand five hundred colones on lunch")
+
+    assert card["details"] == {"amount": "3500", "currency": "CRC", "category": "food"}

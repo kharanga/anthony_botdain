@@ -12,7 +12,7 @@ HUNDRED_WORDS = frozenset({"hundred"})
 THOUSAND_WORDS = frozenset({"thousand"})
 NUMBER_RUN_WORDS = frozenset(UNIT_WORD_VALUES) | HUNDRED_WORDS | THOUSAND_WORDS
 COLON_MULTIPLIER_WORDS = {"mil": 1000, "rojo": 1000, "rojos": 1000, "teja": 100, "tejas": 100}
-PLAIN_MULTIPLIER_WORDS = {"thousand": 1000, "hundred": 100}
+PLAIN_MULTIPLIER_WORDS = HUNDRED_WORDS | THOUSAND_WORDS
 CURRENCY_WORDS = {
     "dollar": "USD", "dollars": "USD", "bucks": "USD", "usd": "USD",
     "colon": "CRC", "colón": "CRC", "colones": "CRC", "crc": "CRC",
@@ -29,9 +29,9 @@ class SpokenAmount:
     currency: str | None
 
 
-def number_words_value(words: list[str]) -> int:
-    total = 0
-    current = 0
+def number_words_value(words: list[str], leading_value: Decimal = Decimal(0)) -> Decimal:
+    total = Decimal(0)
+    current = leading_value
     for word in words:
         if word in UNIT_WORD_VALUES:
             current += UNIT_WORD_VALUES[word]
@@ -75,6 +75,11 @@ def amount_from(tokens: list[str], start: int) -> SpokenAmount | None:
     if tokens[position][0].isdigit():
         digits = tokens[position]
         position += 1
+        if position < len(tokens) and tokens[position] in PLAIN_MULTIPLIER_WORDS:
+            run_length = number_word_run_length(tokens, position)
+            word_value = number_words_value(tokens[position : position + run_length], digits_value(digits, currency))
+            digits = None
+            position += run_length
     else:
         run_length = number_word_run_length(tokens, position)
         word_value = number_words_value(tokens[position : position + run_length])
@@ -83,9 +88,6 @@ def amount_from(tokens: list[str], start: int) -> SpokenAmount | None:
     if position < len(tokens) and tokens[position] in COLON_MULTIPLIER_WORDS:
         multiplier = COLON_MULTIPLIER_WORDS[tokens[position]]
         currency = currency or "CRC"
-        position += 1
-    elif digits is not None and position < len(tokens) and tokens[position] in PLAIN_MULTIPLIER_WORDS:
-        multiplier = PLAIN_MULTIPLIER_WORDS[tokens[position]]
         position += 1
     if position < len(tokens) and tokens[position] in CURRENCY_WORDS:
         currency = currency or CURRENCY_WORDS[tokens[position]]
