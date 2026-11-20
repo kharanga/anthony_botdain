@@ -1,0 +1,239 @@
+[[sample]]
+transcript = "show my allergy card"
+intent = "show_staff_phrase"
+details = { phrase = "allergy" }
+
+[[sample]]
+transcript = "Show the allergy card please."
+intent = "show_staff_phrase"
+details = { phrase = "allergy" }
+
+[[sample]]
+transcript = "open the staff phrase"
+intent = "show_staff_phrase"
+details = { phrase = "allergy" }
+
+[[sample]]
+transcript = "How do I say I'm allergic to shellfish?"
+intent = "show_staff_phrase"
+details = { phrase = "allergy" }
+
+[[sample]]
+transcript = "I need to tell the waiter about my allergy"
+intent = "show_staff_phrase"
+details = { phrase = "allergy" }
+
+[[sample]]
+transcript = "help me ask the waiter what's in this dish"
+intent = "show_staff_phrase"
+details = { phrase = "dish_question" }
+
+[[sample]]
+transcript = "show the hospital phrase"
+intent = "show_staff_phrase"
+details = { phrase = "hospital_pharmacy" }
+
+[[sample]]
+transcript = "does the third one have shrimp?"
+intent = "menu_allergen_question"
+details = { dish_number = "3", ingredient = "shrimp" }
+
+[[sample]]
+transcript = "Does number 4 have lobster"
+intent = "menu_allergen_question"
+details = { dish_number = "4", ingredient = "lobster" }
+
+[[sample]]
+transcript = "is there crab in the second dish"
+intent = "menu_allergen_question"
+details = { dish_number = "2", ingredient = "crab" }
+
+[[sample]]
+transcript = "does dish seven contain shellfish"
+intent = "menu_allergen_question"
+details = { dish_number = "7", ingredient = "shellfish" }
+
+[[sample]]
+transcript = "any shrimp in the first one?"
+intent = "menu_allergen_question"
+details = { dish_number = "1", ingredient = "shrimp" }
+
+[[sample]]
+transcript = "does the ceviche have shrimp"
+intent = "menu_allergen_question"
+details = { dish_name = "ceviche", ingredient = "shrimp" }
+
+[[sample]]
+transcript = "is there crab in the arroz con mariscos"
+intent = "menu_allergen_question"
+details = { dish_name = "arroz con mariscos", ingredient = "crab" }
+
+[[sample]]
+transcript = "is the last one ok for my allergy"
+intent = "menu_allergen_question"
+details = { dish_number = "last" }
+
+[[sample]]
+transcript = "which dishes on this menu have prawns"
+intent = "menu_allergen_question"
+details = { ingredient = "prawn" }
+
+[[sample]]
+transcript = "Where can I see sloths near La Fortuna?"
+intent = "guide_question"
+details = { question = "Where can I see sloths near La Fortuna?" }
+
+[[sample]]
+transcript = "what is the best beach in Manuel Antonio"
+intent = "guide_question"
+details = { question = "what is the best beach in Manuel Antonio" }
+
+[[sample]]
+transcript = "how do I get from San José to Monteverde"
+intent = "guide_question"
+details = { question = "how do I get from San José to Monteverde" }
+
+[[sample]]
+transcript = "When is the rainy season in Costa Rica?"
+intent = "guide_question"
+details = { question = "When is the rainy season in Costa Rica?" }
+
+[[sample]]
+transcript = "is the tap water drinkable in Tamarindo"
+intent = "guide_question"
+details = { question = "is the tap water drinkable in Tamarindo" }
+
+[[sample]]
+transcript = "tell me about Arenal volcano"
+intent = "guide_question"
+details = { question = "tell me about Arenal volcano" }
+
+[[sample]]
+transcript = "where can I eat lobster in Puerto Viejo"
+intent = "guide_question"
+details = { question = "where can I eat lobster in Puerto Viejo" }
+
+[[sample]]
+transcript = "do I need a visa for Costa Rica"
+intent = "guide_question"
+details = { question = "do I need a visa for Costa Rica" }
+
+[[sample]]
+transcript = "how much does a taxi from the airport cost?"
+intent = "guide_question"
+details = { question = "how much does a taxi from the airport cost?" }
+
+[[sample]]
+transcript = "I spent five mil on a taxi"
+intent = "add_expense"
+details = { amount = "5000", currency = "CRC", category = "transport" }
+
+[[sample]]
+transcript = "I paid 12 dollars for lunch"
+intent = "add_expense"
+details = { amount = "12", currency = "USD", category = "food" }
+
+[[sample]]
+transcript = "add an expense of ₡3.500 for coffee"
+intent = "add_expense"
+details = { amount = "3500", currency = "CRC", category = "food" }
+
+[[sample]]
+transcript = "spent 5 rojos at the soda"
+intent = "add_expense"
+details = { amount = "5000", currency = "CRC", category = "food" }
+
+[[sample]]
+transcript = "I paid $45 for the zipline tour"
+intent = "add_expense"
+details = { amount = "45", currency = "USD", category = "activities" }
+
+[[sample]]
+transcript = "add 80 dollars for the hotel"
+intent = "add_expense"
+details = { amount = "80", currency = "USD", category = "lodging" }
+
+[[sample]]
+transcript = "I spent twenty five hundred colones on a bus ticket"
+intent = "add_expense"
+details = { amount = "2500", currency = "CRC", category = "transport" }
+
+[[sample]]
+transcript = "I just spent 15,000 colones on souvenirs"
+intent = "add_expense"
+details = { amount = "15000", currency = "CRC", category = "shopping" }
+
+[[sample]]
+transcript = "I paid 7.50 for parking"
+intent = "add_expense"
+details = { amount = "7.50", category = "transport" }
+
+[[sample]]
+transcript = "How much have I spent on food?"
+intent = "spending_question"
+details = { category = "food" }
+
+[[sample]]
+transcript = "how much did I spend today"
+intent = "spending_question"
+details = { period = "today" }
+
+[[sample]]
+transcript = "what's my total spending"
+intent = "spending_question"
+details = {}
+
+[[sample]]
+transcript = "how much have I spent on taxis this week"
+intent = "spending_question"
+details = { category = "transport", period = "this_week" }
+
+[[sample]]
+transcript = "what did I spend on lodging yesterday"
+intent = "spending_question"
+details = { category = "lodging", period = "yesterday" }
+
+[[sample]]
+transcript = "show my boarding pass"
+intent = "open_vault"
+details = { document = "boarding_pass" }
+
+[[sample]]
+transcript = "open my passport"
+intent = "open_vault"
+details = { document = "passport" }
+
+[[sample]]
+transcript = "open the vault"
+intent = "open_vault"
+details = {}
+
+[[sample]]
+transcript = "pull up my travel insurance"
+intent = "open_vault"
+details = { document = "insurance" }
+
+[[sample]]
+transcript = "show me my hotel reservation"
+intent = "open_vault"
+details = { document = "hotel_booking" }
+
+[[sample]]
+transcript = "where's my driver's license"
+intent = "open_vault"
+details = { document = "drivers_license" }
+
+[[sample]]
+transcript = "play some music"
+
+[[sample]]
+transcript = "set a timer for ten minutes"
+
+[[sample]]
+transcript = "call my mom"
+
+[[sample]]
+transcript = "turn on the flashlight"
+
+[[sample]]
+transcript = "take a selfie"

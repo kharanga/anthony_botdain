@@ -10,6 +10,7 @@ from travel_companion.cards import AnswerCard, Evidence
 from travel_companion.config import DEFAULT_CONFIG_PATH, Config, load_config
 from travel_companion.database import set_up_database
 from travel_companion.full_screen import FullScreenView, full_screen_router
+from travel_companion.intent_router import intent_router
 from travel_companion.model_client import ModelClient
 from travel_companion.rate import CurrentRate, current_rate, rate_evidence, rate_router
 from travel_companion.vault import Clock, VaultSession, vault_router
@@ -40,6 +41,7 @@ def create_app(config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.mono
     app.state.config = config
     app.state.model_client = ModelClient(config.model_endpoint_url)
     app.include_router(ask_router)
+    app.include_router(intent_router)
 
     @app.get("/api/status")
     def get_status() -> AnswerCard:
