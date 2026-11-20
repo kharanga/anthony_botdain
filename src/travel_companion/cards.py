@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-CardKind = Literal["status", "rate", "answer", "model_unavailable", "vault", "display"]
+CardKind = Literal["status", "rate", "answer", "model_unavailable", "vault", "display", "allergen_terms"]
 
 
 class Evidence(BaseModel):

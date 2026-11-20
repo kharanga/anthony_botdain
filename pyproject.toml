@@ -11,6 +11,7 @@ dependencies = [
     "uvicorn>=0.30",
     "duckdb>=1.1",
     "cryptography>=43",
+    "pyyaml>=6",
 ]
 
 [project.scripts]

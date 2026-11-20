@@ -1,3 +1,6 @@
+from conftest import SPECIMEN_PACKS_DIR
+
+
 def test_status_returns_an_answer_card_with_evidence(client):
     response = client.get("/api/status")
 
@@ -31,11 +34,12 @@ def test_status_reads_values_from_the_given_config_file(tmp_path):
 
     config_path = tmp_path / "other.toml"
     config_path.write_text(
-        'country = "cr"\n'
+        'country = "specimen"\n'
         'active_allergens = ["shellfish", "peanut"]\n'
         'home_currency = "USD"\n'
         "rate = 25000\n"
         f'data_dir = "{tmp_path / "data"}"\n'
+        f'packs_dir = "{SPECIMEN_PACKS_DIR}"\n'
         "[model]\n"
         'endpoint_url = "http://127.0.0.1:9999/v1/chat/completions"\n'
     )

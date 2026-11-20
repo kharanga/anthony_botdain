@@ -7,12 +7,15 @@ from fake_model_server import FakeModelServer
 from travel_companion.app import create_app
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "default.toml"
+REPO_PACKS_DIR = Path(__file__).resolve().parent.parent / "packs"
+SPECIMEN_PACKS_DIR = Path(__file__).resolve().parent / "packs"
 DEFAULT_MODEL_ENDPOINT_URL = "http://127.0.0.1:8080/v1/chat/completions"
 
 
 def write_config(config_path: Path, data_dir: Path, model_endpoint_url: str) -> None:
     default_text = DEFAULT_CONFIG_PATH.read_text()
     config_text = default_text.replace('data_dir = "data"', f'data_dir = "{data_dir}"')
+    config_text = config_text.replace('packs_dir = "packs"', f'packs_dir = "{REPO_PACKS_DIR}"')
     config_path.write_text(config_text.replace(DEFAULT_MODEL_ENDPOINT_URL, model_endpoint_url))
 
 

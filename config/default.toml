@@ -6,6 +6,8 @@ home_currency = "USD"
 rate = 510.0
 # Relative paths are resolved against the current working directory.
 data_dir = "data"
+# Folder holding one Country Pack folder per country, plus global/ for Global Dishes.
+packs_dir = "packs"
 
 [model]
 # OpenAI-compatible chat-completions endpoint (ADR 0001). llama.cpp's llama-server on the Mac.

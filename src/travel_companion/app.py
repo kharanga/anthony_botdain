@@ -4,10 +4,12 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
+from travel_companion.allergen_terms import allergen_terms_router
 from travel_companion.ask import ask_router
 from travel_companion.brightness import brightness_backend_from_config
 from travel_companion.cards import AnswerCard, Evidence
 from travel_companion.config import DEFAULT_CONFIG_PATH, Config, load_config
+from travel_companion.country_pack import CountryPack, country_pack_evidence, load_country_pack
 from travel_companion.database import set_up_database
 from travel_companion.full_screen import FullScreenView, full_screen_router
 from travel_companion.model_client import ModelClient
@@ -17,7 +19,7 @@ from travel_companion.vault import Clock, VaultSession, vault_router
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
-def status_card(config: Config, config_path: Path, rate: CurrentRate) -> AnswerCard:
+def status_card(config: Config, config_path: Path, rate: CurrentRate, country_pack: CountryPack) -> AnswerCard:
     allergens = ", ".join(config.active_allergens)
     return AnswerCard(
         kind="status",
@@ -29,21 +31,25 @@ def status_card(config: Config, config_path: Path, rate: CurrentRate) -> AnswerC
             Evidence(source=str(config_path), text=f"home_currency = {config.home_currency}"),
             rate_evidence(rate),
             Evidence(source=str(config_path), text=f"model.endpoint_url = {config.model_endpoint_url}"),
+            *country_pack_evidence(country_pack),
         ],
     )
 
 
 def create_app(config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.monotonic) -> FastAPI:
     config = load_config(config_path)
+    country_pack = load_country_pack(config.packs_dir, config.country, config.active_allergens)
     database_path = set_up_database(config.data_dir)
     app = FastAPI(title="travel-companion")
     app.state.config = config
+    app.state.country_pack = country_pack
     app.state.model_client = ModelClient(config.model_endpoint_url)
     app.include_router(ask_router)
+    app.include_router(allergen_terms_router)
 
     @app.get("/api/status")
     def get_status() -> AnswerCard:
-        return status_card(config, config_path, current_rate(database_path, config.rate, config_path))
+        return status_card(config, config_path, current_rate(database_path, config.rate, config_path), country_pack)
 
     app.include_router(rate_router(database_path, config.rate, config_path))
 
