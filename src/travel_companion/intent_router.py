@@ -3,11 +3,13 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from travel_companion.cards import AnswerCard, Evidence
+from travel_companion.country_pack import CountryPack
 from travel_companion.spoken_amount import UNIT_WORD_VALUES, spoken_amount_in
+from travel_companion.staff_phrase import StaffPhraseCard, UnknownPhrase, staff_phrase_card
 
 IntentName = Literal[
     "show_staff_phrase",
@@ -338,9 +340,38 @@ class TranscriptRequest(BaseModel):
     transcript: str
 
 
+class StaffPhraseIntentCard(StaffPhraseCard):
+    intent: IntentName | None
+    details: dict[str, str]
+
+
+def staff_phrase_card_leading_with(pack: CountryPack, phrase_name: str | None) -> StaffPhraseCard:
+    try:
+        return staff_phrase_card(pack, phrase_name)
+    except UnknownPhrase:
+        return staff_phrase_card(pack)
+
+
+def staff_phrase_intent_card(pack: CountryPack, routed_card: IntentCard) -> StaffPhraseIntentCard:
+    phrase_card = staff_phrase_card_leading_with(pack, routed_card.details.get("phrase"))
+    return StaffPhraseIntentCard(
+        **phrase_card.model_dump(exclude={"evidence"}),
+        evidence=phrase_card.evidence + routed_card.evidence,
+        intent=routed_card.intent,
+        details=routed_card.details,
+    )
+
+
+def answer_card_for_routed_intent(pack: CountryPack, routed_card: IntentCard) -> StaffPhraseIntentCard | IntentCard:
+    if routed_card.intent == "show_staff_phrase":
+        return staff_phrase_intent_card(pack, routed_card)
+    return routed_card
+
+
 intent_router = APIRouter()
 
 
-@intent_router.post("/api/transcript", response_model=IntentCard)
-def post_transcript(transcript_request: TranscriptRequest) -> IntentCard:
-    return route_transcript(transcript_request.transcript)
+@intent_router.post("/api/transcript", response_model=StaffPhraseIntentCard | IntentCard)
+def post_transcript(request: Request, transcript_request: TranscriptRequest) -> StaffPhraseIntentCard | IntentCard:
+    routed_card = route_transcript(transcript_request.transcript)
+    return answer_card_for_routed_intent(request.app.state.country_pack, routed_card)
