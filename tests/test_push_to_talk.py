@@ -34,6 +34,15 @@ def test_releasing_push_to_talk_returns_the_routed_card_for_what_was_said(config
     assert {"source": "transcript", "text": "I spent 5 mil on a taxi."} in card["evidence"]
 
 
+def test_saying_show_my_allergy_card_returns_the_staff_phrase_card(config_path):
+    card = spoken_card(config_path, transcriber_hearing(" Show my allergy card."))
+
+    assert card["kind"] == "staff_phrase"
+    assert card["intent"] == "show_staff_phrase"
+    assert card["phrases"][0]["name"] == "allergy"
+    assert {"source": "transcript", "text": "Show my allergy card."} in card["evidence"]
+
+
 def test_whisper_writing_number_four_as_hash_four_still_finds_dish_number_four(config_path):
     card = spoken_card(config_path, transcriber_hearing(" Does #4 have Lobster?"))
 

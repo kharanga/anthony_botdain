@@ -7,9 +7,12 @@ import yaml
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, RootModel, StringConstraints, ValidationError
 
 from travel_companion.cards import Evidence
+from travel_companion.text_folding import accent_and_case_folded
 
 PACK_MANIFEST_FILE = "pack.yaml"
 ALLERGEN_TERMS_FILE = "allergen_terms.yaml"
+KNOWN_DISHES_FILE = "dishes.yaml"
+GLOBAL_DISHES_FOLDER = "global"
 PHRASES_FILE = "phrases.yaml"
 
 NonEmptyText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
@@ -50,6 +53,21 @@ class AllergenTermsFile(RootModel[dict[NonEmptyText, Annotated[list[NonEmptyText
     pass
 
 
+IngredientMark = Literal["usual", "sometimes"]
+
+
+class KnownDishEntry(StrictPackModel):
+    name: NonEmptyText
+    aliases: list[NonEmptyText] = []
+    ingredients: Annotated[dict[NonEmptyText, IngredientMark], Field(min_length=1)]
+    source: NonEmptyText
+    reviewed: bool = False
+
+
+class KnownDishesFile(RootModel[list[KnownDishEntry]]):
+    pass
+
+
 class PhraseEntry(StrictPackModel):
     english: NonEmptyText
     spanish: NonEmptyText
@@ -58,6 +76,20 @@ class PhraseEntry(StrictPackModel):
 
 class PhrasesFile(RootModel[Annotated[dict[NonEmptyText, PhraseEntry], Field(min_length=1)]]):
     pass
+
+
+@dataclass(frozen=True)
+class KnownDish:
+    name: str
+    aliases: tuple[str, ...]
+    ingredients: tuple[tuple[str, IngredientMark], ...]
+    source: str
+    reviewed: bool
+    pack_file: Path
+
+    @property
+    def folded_names(self) -> tuple[str, ...]:
+        return tuple(accent_and_case_folded(name) for name in (self.name, *self.aliases))
 
 
 @dataclass(frozen=True)
@@ -81,6 +113,7 @@ class CountryPack:
     folder: Path
     manifest: PackManifest
     allergen_terms: tuple[AllergenTerm, ...]
+    known_dishes: tuple[KnownDish, ...]
     phrases: tuple[Phrase, ...]
 
     def terms_for(self, allergen: str) -> tuple[AllergenTerm, ...]:
@@ -138,6 +171,53 @@ def loaded_allergen_terms(pack_folder: Path, required_allergens: tuple[str, ...]
     )
 
 
+def loaded_dishes_file(dishes_path: Path) -> tuple[KnownDish, ...]:
+    entries = validated_pack_file(dishes_path, KnownDishesFile).root
+    dishes = tuple(
+        KnownDish(
+            name=entry.name,
+            aliases=tuple(entry.aliases),
+            ingredients=tuple(entry.ingredients.items()),
+            source=entry.source,
+            reviewed=entry.reviewed,
+            pack_file=dishes_path,
+        )
+        for entry in entries
+    )
+    raise_on_shared_dish_names(dishes)
+    return dishes
+
+
+def dish_named_in(dish: KnownDish) -> str:
+    return f"{dish.name!r} in {dish.pack_file}"
+
+
+def raise_on_shared_dish_names(dishes: tuple[KnownDish, ...]) -> None:
+    dishes_by_folded_name: dict[str, KnownDish] = {}
+    for dish in dishes:
+        for folded_name in set(dish.folded_names):
+            earlier_dish = dishes_by_folded_name.setdefault(folded_name, dish)
+            if earlier_dish is not dish:
+                raise InvalidCountryPack(
+                    f"Known Dish name or alias {folded_name!r} is used by both {dish_named_in(earlier_dish)} and {dish_named_in(dish)}"
+                )
+
+
+def merged_known_dishes(global_dishes: tuple[KnownDish, ...], country_dishes: tuple[KnownDish, ...]) -> tuple[KnownDish, ...]:
+    country_dish_names = {accent_and_case_folded(dish.name) for dish in country_dishes}
+    kept_global_dishes = tuple(dish for dish in global_dishes if accent_and_case_folded(dish.name) not in country_dish_names)
+    merged_dishes = kept_global_dishes + country_dishes
+    raise_on_shared_dish_names(merged_dishes)
+    return merged_dishes
+
+
+def loaded_known_dishes(packs_dir: Path, pack_folder: Path) -> tuple[KnownDish, ...]:
+    return merged_known_dishes(
+        loaded_dishes_file(packs_dir / GLOBAL_DISHES_FOLDER / KNOWN_DISHES_FILE),
+        loaded_dishes_file(pack_folder / KNOWN_DISHES_FILE),
+    )
+
+
 def loaded_phrases(pack_folder: Path) -> tuple[Phrase, ...]:
     phrases_path = pack_folder / PHRASES_FILE
     return tuple(
@@ -154,6 +234,7 @@ def load_country_pack(packs_dir: Path, country: str, required_allergens: tuple[s
         folder=pack_folder,
         manifest=loaded_manifest(pack_folder, country),
         allergen_terms=loaded_allergen_terms(pack_folder, required_allergens),
+        known_dishes=loaded_known_dishes(Path(packs_dir), pack_folder),
         phrases=loaded_phrases(pack_folder),
     )
 

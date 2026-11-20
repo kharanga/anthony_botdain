@@ -9,7 +9,8 @@ from fastapi import APIRouter, Request
 from fastapi.concurrency import run_in_threadpool
 
 from travel_companion.cards import AnswerCard, Evidence
-from travel_companion.intent_router import IntentCard, route_transcript
+from travel_companion.country_pack import CountryPack
+from travel_companion.intent_router import IntentCard, StaffPhraseIntentCard, answer_card_for_routed_intent, route_transcript
 from travel_companion.model_client import ModelClient
 
 Transcriber = Callable[[bytes], str]
@@ -75,22 +76,28 @@ def nothing_heard_card() -> AnswerCard:
     )
 
 
-def spoken_question_card(audio: bytes, transcriber: Transcriber, model_client: ModelClient) -> IntentCard | AnswerCard:
+SpokenQuestionCard = StaffPhraseIntentCard | IntentCard | AnswerCard
+
+
+def spoken_question_card(
+    audio: bytes, transcriber: Transcriber, model_client: ModelClient, country_pack: CountryPack
+) -> SpokenQuestionCard:
     try:
         transcript = cleaned_transcript(transcriber(audio))
     except SpeechToTextUnavailable as unavailable:
         return speech_unavailable_card(str(unavailable))
     if not transcript:
         return nothing_heard_card()
-    return route_transcript(transcript, model_client)
+    return answer_card_for_routed_intent(country_pack, route_transcript(transcript, model_client))
 
 
 def speech_router(transcriber: Transcriber) -> APIRouter:
     router = APIRouter()
 
-    @router.post("/api/speech", response_model=IntentCard | AnswerCard)
-    async def post_speech(request: Request) -> IntentCard | AnswerCard:
+    @router.post("/api/speech", response_model=SpokenQuestionCard)
+    async def post_speech(request: Request) -> SpokenQuestionCard:
         audio = await request.body()
-        return await run_in_threadpool(spoken_question_card, audio, transcriber, request.app.state.model_client)
+        app_state = request.app.state
+        return await run_in_threadpool(spoken_question_card, audio, transcriber, app_state.model_client, app_state.country_pack)
 
     return router

@@ -37,5 +37,5 @@ def test_a_spoken_question_is_transcribed_by_real_whisper_and_routed(tmp_path):
 
     assert response.status_code == 200
     card = response.json()
-    assert card["kind"] == "intent"
+    assert card["kind"] == "staff_phrase"
     assert card["intent"] == "show_staff_phrase"
