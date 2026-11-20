@@ -16,10 +16,20 @@
   #rate-form { margin-top: 16px; display: flex; gap: 8px; align-items: center; font-size: 1.2rem; }
   #rate-form input { font-size: 1.2rem; width: 8em; padding: 8px; }
   #rate-form button { font-size: 1.2rem; padding: 8px 16px; }
+  #staff-phrase-button { display: block; width: 100%; margin-bottom: 16px; padding: 24px; font-size: 1.8rem; border: 0; border-radius: 12px; background: #2a5d9f; color: #fff; }
+  #staff-phrase-view { position: fixed; inset: 0; overflow-y: auto; background: #fff; color: #000; padding: 24px; box-sizing: border-box; }
+  #staff-phrase-view[hidden] { display: none; }
+  #staff-phrase-view .phrase { margin: 0 0 28px; padding-bottom: 20px; border-bottom: 2px solid #ccc; }
+  #staff-phrase-view .spanish { font-size: 2.6rem; line-height: 1.25; font-weight: 600; margin: 0 0 8px; }
+  #staff-phrase-view .english { font-size: 1.2rem; color: #444; margin: 0 0 6px; }
+  #staff-phrase-view .verification { display: inline-block; font-size: 1rem; padding: 2px 10px; border-radius: 999px; background: #fde68a; color: #000; }
+  #staff-phrase-view .source { font-size: 0.85rem; color: #666; margin-top: 6px; }
+  #staff-phrase-close { position: sticky; top: 0; float: right; font-size: 1.4rem; padding: 10px 20px; }
 </style>
 </head>
 <body>
 <main>
+  <button id="staff-phrase-button" type="button">Allergy card</button>
   <section id="card" class="card"><p>Loading…</p></section>
   <form id="rate-form">
     <label for="rate-input">Rate (₡ per US dollar)</label>
@@ -28,6 +38,10 @@
   </form>
   <p><a id="vault-link" href="/vault" style="color: #9cf; font-size: 1.2rem;">Vault</a></p>
 </main>
+<section id="staff-phrase-view" hidden>
+  <button id="staff-phrase-close" type="button">Close</button>
+  <div id="staff-phrase-list"></div>
+</section>
 <script>
   function appendTextElement(parent, tagName, text, className) {
     const element = document.createElement(tagName);
@@ -84,6 +98,35 @@
     }));
   }
 
+  function renderStaffPhraseCard(card) {
+    const list = document.getElementById("staff-phrase-list");
+    list.replaceChildren();
+    card.phrases.forEach((phrase, index) => {
+      const block = appendTextElement(list, "article", "", "phrase");
+      block.dataset.phrase = phrase.name;
+      appendTextElement(block, "p", phrase.spanish, "spanish");
+      appendTextElement(block, "p", phrase.english, "english");
+      appendTextElement(block, "span", phrase.verification, "verification");
+      appendTextElement(block, "div", card.evidence[index].source, "source");
+    });
+  }
+
+  async function showStaffPhraseCard(phraseName) {
+    const view = document.getElementById("staff-phrase-view");
+    const query = phraseName ? "?phrase=" + encodeURIComponent(phraseName) : "";
+    try {
+      const response = await fetch("/api/staff-phrase" + query);
+      renderStaffPhraseCard(await response.json());
+      view.hidden = false;
+    } catch (error) {
+      document.getElementById("card").textContent = "The app is not responding: " + error;
+    }
+  }
+
+  document.getElementById("staff-phrase-button").addEventListener("click", () => showStaffPhraseCard());
+  document.getElementById("staff-phrase-close").addEventListener("click", () => {
+    document.getElementById("staff-phrase-view").hidden = true;
+  });
   document.getElementById("rate-form").addEventListener("submit", saveRate);
   showStatusCard();
 </script>
