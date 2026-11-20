@@ -110,3 +110,9 @@ def test_number_words_after_a_digit_and_thousand_are_added_to_the_expense_amount
     card = routed_card(client, "I spent 3 thousand five hundred colones on lunch")
 
     assert card["details"] == {"amount": "3500", "currency": "CRC", "category": "food"}
+
+
+def test_a_count_before_the_item_is_not_taken_as_the_expense_amount(client):
+    card = routed_card(client, "add one coffee for 2000 colones")
+
+    assert card["details"] == {"amount": "2000", "currency": "CRC", "category": "food"}

@@ -29,6 +29,13 @@ class SpokenAmount:
     currency: str | None
 
 
+@dataclass(frozen=True)
+class AmountCandidate:
+    spoken_amount: SpokenAmount
+    end: int
+    names_currency_or_multiplier: bool
+
+
 def number_words_value(words: list[str], leading_value: Decimal = Decimal(0)) -> Decimal:
     total = Decimal(0)
     current = leading_value
@@ -62,7 +69,7 @@ def number_word_run_length(tokens: list[str], start: int) -> int:
     return end - start
 
 
-def amount_from(tokens: list[str], start: int) -> SpokenAmount | None:
+def amount_from(tokens: list[str], start: int) -> AmountCandidate | None:
     position = start
     currency = None
     if tokens[position] in CURRENCY_SYMBOLS:
@@ -85,21 +92,36 @@ def amount_from(tokens: list[str], start: int) -> SpokenAmount | None:
         word_value = number_words_value(tokens[position : position + run_length])
         position += run_length
     multiplier = 1
+    names_multiplier = word_value is not None and any(
+        token in PLAIN_MULTIPLIER_WORDS for token in tokens[start:position]
+    )
     if position < len(tokens) and tokens[position] in COLON_MULTIPLIER_WORDS:
         multiplier = COLON_MULTIPLIER_WORDS[tokens[position]]
         currency = currency or "CRC"
+        names_multiplier = True
         position += 1
     if position < len(tokens) and tokens[position] in CURRENCY_WORDS:
         currency = currency or CURRENCY_WORDS[tokens[position]]
+        position += 1
     base = digits_value(digits, currency) if digits is not None else Decimal(word_value)
-    return SpokenAmount(base * multiplier, currency)
+    return AmountCandidate(SpokenAmount(base * multiplier, currency), position, currency is not None or names_multiplier)
+
+
+def amount_candidates_in(tokens: list[str]) -> list[AmountCandidate]:
+    candidates = []
+    position = 0
+    while position < len(tokens):
+        candidate = amount_from(tokens, position) if is_amount_start(tokens[position]) else None
+        if candidate is None:
+            position += 1
+        else:
+            candidates.append(candidate)
+            position = candidate.end
+    return candidates
 
 
 def spoken_amount_in(text: str) -> SpokenAmount | None:
-    tokens = AMOUNT_TOKEN_PATTERN.findall(text.lower())
-    for start, token in enumerate(tokens):
-        if is_amount_start(token):
-            amount = amount_from(tokens, start)
-            if amount is not None:
-                return amount
-    return None
+    candidates = amount_candidates_in(AMOUNT_TOKEN_PATTERN.findall(text.lower()))
+    anchored = [candidate for candidate in candidates if candidate.names_currency_or_multiplier]
+    preferred = anchored or candidates
+    return preferred[0].spoken_amount if preferred else None
