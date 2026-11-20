@@ -41,7 +41,25 @@ def test_mollusk_only_lines_name_no_shellfish_terms(client, mollusk_line):
     card = checked_card(client, mollusk_line)
 
     assert evidence_texts(card) == [mollusk_line]
-    assert card["body"] == "No Allergen Terms on this line."
+    assert card["allergy_labels"] == [{"allergen": "shellfish", "label": "Ask staff"}]
+
+
+def test_a_menu_line_with_a_shellfish_term_is_labelled_contains_with_the_staff_phrase_one_tap_away(client):
+    card = checked_card(client, "Arroz con camarones")
+
+    assert card["allergy_labels"] == [{"allergen": "shellfish", "label": "Contains"}]
+    assert card["body"].startswith("Contains shellfish")
+    assert card["staff_phrase_action"] == {"label": "Show staff phrase", "phrase": "allergy"}
+
+
+def test_a_menu_line_with_no_term_says_ask_staff_never_an_all_clear(client):
+    card = checked_card(client, "Pulpo al ajillo")
+
+    assert card["allergy_labels"] == [{"allergen": "shellfish", "label": "Ask staff"}]
+    assert card["body"].startswith("Ask staff about shellfish")
+    assert "safe" not in card["body"].lower()
+    assert "no allergen terms" not in card["body"].lower()
+    assert card["staff_phrase_action"] == {"label": "Show staff phrase", "phrase": "allergy"}
 
 
 def test_a_term_inside_a_longer_word_does_not_match(client):
