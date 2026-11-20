@@ -1,0 +1,8 @@
+- name: Cajeta de maní
+  aliases: [cajeta]
+  ingredients:
+    peanut: usual
+    sugar: usual
+    milk: usual
+  source: specimen
+  reviewed: true

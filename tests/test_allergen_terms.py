@@ -53,6 +53,7 @@ def test_a_term_inside_a_longer_word_does_not_match(client):
 def copied_pack_folder(tmp_path, country):
     packs_dir = tmp_path / "packs"
     shutil.copytree(REPO_PACKS_DIR / country, packs_dir / country)
+    shutil.copytree(REPO_PACKS_DIR / "global", packs_dir / "global")
     return packs_dir
 
 

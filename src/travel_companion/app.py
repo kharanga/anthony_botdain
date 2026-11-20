@@ -11,6 +11,7 @@ from travel_companion.cards import AnswerCard, Evidence
 from travel_companion.config import DEFAULT_CONFIG_PATH, Config, load_config
 from travel_companion.country_pack import CountryPack, country_pack_evidence, load_country_pack
 from travel_companion.database import set_up_database
+from travel_companion.dish_lookup import dish_lookup_router
 from travel_companion.full_screen import FullScreenView, full_screen_router
 from travel_companion.intent_router import intent_router
 from travel_companion.model_client import ModelClient
@@ -48,6 +49,7 @@ def create_app(config_path: Path = DEFAULT_CONFIG_PATH, clock: Clock = time.mono
     app.include_router(ask_router)
     app.include_router(intent_router)
     app.include_router(allergen_terms_router)
+    app.include_router(dish_lookup_router)
 
     @app.get("/api/status")
     def get_status() -> AnswerCard:
