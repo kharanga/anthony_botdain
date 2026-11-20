@@ -5,6 +5,12 @@
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/4
 
+## Tickets
+
+- #35 OCR a photo into lines with confidence (open)
+- #36 OCR benchmark: Tesseract vs PaddleOCR (open)
+- #37 Run the OCR benchmark on 30+ real photos and pick the engine (open)
+
 Part of #1.
 
 ## What to build

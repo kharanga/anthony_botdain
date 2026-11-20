@@ -5,6 +5,13 @@
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/5
 
+## Tickets
+
+- #22 Model endpoint with a fake server (closed)
+- #23 Fact guardrail (closed)
+- #24 Real llama.cpp on the Mac (closed)
+- #25 Mac model benchmark (closed)
+
 Part of #1.
 
 ## What to build

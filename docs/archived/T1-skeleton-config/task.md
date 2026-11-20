@@ -5,6 +5,11 @@
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/2
 
+## Tickets
+
+- #20 App boots and returns an answer card (closed)
+- #21 Edit the Rate on the device (closed)
+
 Part of #1.
 
 ## What to build

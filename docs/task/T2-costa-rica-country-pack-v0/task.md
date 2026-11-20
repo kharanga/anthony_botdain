@@ -5,6 +5,14 @@
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/3
 
+## Tickets
+
+- #30 YAML Country Pack loader and Allergen Term matching (open)
+- #31 Staff phrase card (open)
+- #32 Known Dish YAML: Global Dishes and country dishes, about 10 of each (open)
+- #33 Global Dishes, about 50 (open)
+- #34 Costa Rica dishes, about 100 (open)
+
 Part of #1.
 
 ## What to build

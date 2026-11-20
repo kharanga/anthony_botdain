@@ -5,6 +5,12 @@
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/10
 
+## Tickets
+
+- #26 Add and unlock a document (closed)
+- #27 Vault auto-lock (closed)
+- #28 Full-brightness ticket view (closed)
+
 Part of #1.
 
 ## What to build

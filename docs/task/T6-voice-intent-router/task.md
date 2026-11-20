@@ -5,6 +5,13 @@
 **Labels:** ready-for-agent  
 **GitHub:** https://github.com/kharanga/anthony_botdain/issues/7
 
+## Tickets
+
+- #38 Rules-first intent router over text transcripts (open)
+- #39 Model fallback for transcripts the rules miss (open)
+- #40 "Show my allergy card" opens the staff phrase card (open)
+- #41 Push-to-talk speech-to-text with whisper.cpp (open)
+
 Part of #1.
 
 ## What to build
