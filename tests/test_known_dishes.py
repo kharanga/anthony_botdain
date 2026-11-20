@@ -76,8 +76,8 @@ def test_an_unreviewed_dish_card_says_unreviewed_until_the_yaml_marks_it_reviewe
         card_before = looked_up_card(client, "Chifrijo")
     dishes_path.write_text(
         dishes_path.read_text().replace(
-            "source: https://en.wikipedia.org/wiki/Chifrijo\n  reviewed: false",
-            "source: https://en.wikipedia.org/wiki/Chifrijo\n  reviewed: true",
+            "source: https://es.wikipedia.org/wiki/Chifrijo\n  reviewed: false",
+            "source: https://es.wikipedia.org/wiki/Chifrijo\n  reviewed: true",
         )
     )
 
@@ -122,7 +122,7 @@ def test_an_invalid_dish_stops_the_app_with_a_message_naming_the_problem(tmp_pat
 def test_an_alias_clash_between_a_global_and_a_country_dish_names_both_files(tmp_path):
     packs_dir = copied_packs_dir(tmp_path)
     dishes_path = packs_dir / "cr" / "dishes.yaml"
-    dishes_path.write_text(dishes_path.read_text().replace("aliases: [pinto]", "aliases: [pinto, arroz frito]"))
+    dishes_path.write_text(dishes_path.read_text().replace("aliases: [pinto, gallopinto]", "aliases: [pinto, gallopinto, arroz frito]"))
 
     with pytest.raises(InvalidCountryPack) as stopped_startup:
         client_for_packs(tmp_path, packs_dir)
